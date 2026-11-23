@@ -1,7 +1,7 @@
 /* IronLog — 웨이트 트레이닝 기록 (1단계: 달력 · 하루 기록 · 운동 추가 · 세트 입력) */
 'use strict';
 
-const APP_VERSION = '0.3.1';
+const APP_VERSION = '0.3.2';
 const STORE_KEY = 'ironlog-v1';
 const PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '유산소'];
 const PART_COLOR = {
@@ -112,7 +112,9 @@ function convertWeight(w, from, to) {
   const v = to === 'lb' ? num(w) / LB : num(w) * LB;
   return Math.round(v * 2) / 2;                   // 0.5 단위로 반올림
 }
-function setVolume(ex, s, unit) { return ex.type === 'weight_reps' ? toKg(s.w, unit) * num(s.r) : 0; }
+/* 볼륨 배수: 덤벨은 한 손 무게를 적으므로 ×2 (덤벨 하나를 두 손으로 드는 종목은 vmul: 1) */
+function volMul(ex) { return typeof ex.vmul === 'number' ? ex.vmul : (ex.equip === '덤벨' ? 2 : 1); }
+function setVolume(ex, s, unit) { return ex.type === 'weight_reps' ? toKg(s.w, unit) * num(s.r) * volMul(ex) : 0; }
 function getRest(ex) { const r = db.rest[ex.id]; return typeof r === 'number' ? r : (typeof ex.rest === 'number' ? ex.rest : 90); }
 
 function dayMinutes(day) {
@@ -556,7 +558,11 @@ function openCustomForm() {
     '<div class="row2"><label class="field">기록 방식<select id="cxType">' +
     Object.keys(TYPE_LABEL).map(k => '<option value="' + k + '">' + TYPE_LABEL[k] + '</option>').join('') + '</select></label>' +
     '<label class="field">쉬는 시간(초)<input id="cxRest" inputmode="numeric" value="90"></label></div>' +
+    '<label class="check-line" id="cxHandLine"><input type="checkbox" id="cxHand" checked> 덤벨 한 손 무게로 적기 (볼륨 ×2)</label>' +
     '<div class="modal-foot"><button data-back>취소</button><button class="ok" id="cxSave">추가</button></div>');
+  const syncHand = () => { $('cxHandLine').style.display = $('cxEquip').value === '덤벨' ? '' : 'none'; };
+  $('cxEquip').onchange = syncHand;
+  syncHand();
   $('cxSave').onclick = () => {
     const name = $('cxName').value.trim();
     if (!name) { $('cxName').focus(); return; }
@@ -564,6 +570,7 @@ function openCustomForm() {
       id: 'custom_' + uid(), name: name, en: '', aka: [], part: $('cxPart').value, equip: $('cxEquip').value,
       type: $('cxType').value, rest: Math.round(parseInput($('cxRest').value) || 90), tips: [], mistake: '', custom: true
     };
+    if (ex.equip === '덤벨' && !$('cxHand').checked) ex.vmul = 1;
     db.custom.push(ex);
     rebuildExMap();
     save();
@@ -606,6 +613,7 @@ function renderSet() {
     '<button class="head-btn" data-act="history">지난 기록</button></header>' +
     '<div class="scroll">' +
     '<div class="set-head"><span class="badge">' + esc(ex.part) + '</span><span class="badge">' + esc(ex.equip) + '</span>' +
+    (ex.type === 'weight_reps' && volMul(ex) === 2 ? '<span class="badge hand">한 손 무게 · 볼륨 ×2</span>' : '') +
     '<button class="rest-btn" data-act="rest">⏱ ' + (getRest(ex) ? '쉬는 시간 ' + restText(getRest(ex)) : '타이머 없음') + '</button>' +
     '<span class="set-stat" id="setStat"></span></div>' +
     '<div class="set-table" style="--cols:' + fields.length + '">' + rows + '</div>' +

@@ -3,13 +3,15 @@
  *  part : 가슴 / 등 / 하체 / 어깨 / 팔 / 코어 / 유산소
  *  equip: 바벨 / 덤벨 / 머신 / 케이블 / 맨몸 / 기타
  *  type : weight_reps(무게+횟수) / reps(횟수) / time(초) / distance_time(분+km)
+ *  vmul : 볼륨 계산 배수 (없으면 덤벨 = 2: 한 손 무게를 적고 양손으로 계산, 그 외 = 1)
+ *         덤벨 하나를 두 손으로 드는 종목은 vmul: 1
  * tips·mistake가 비어 있는 종목은 Gemini(ironlog-trainer)가 나중에 채운다.
  */
 window.IRONLOG_EXERCISES = [
   // ── 가슴 ──
   {
-    id: 'barbell_bench_press', name: '벤치프레스', en: 'Barbell Bench Press',
-    aka: ['바벨 벤치프레스', '플랫 벤치프레스'], part: '가슴', equip: '바벨', type: 'weight_reps', rest: 120,
+    id: 'barbell_bench_press', name: '바벨 벤치프레스', en: 'Barbell Bench Press',
+    aka: ['벤치프레스', '플랫 벤치프레스'], part: '가슴', equip: '바벨', type: 'weight_reps', rest: 120,
     tips: [
       '견갑골을 후인·하강하여 가슴을 열고 아치를 유지한다.',
       '바벨을 내릴 때 팔꿈치 각도가 몸통과 45~60도 정도가 되게 한다.',
@@ -35,7 +37,7 @@ window.IRONLOG_EXERCISES = [
     ],
     mistake: '무게를 밀 때 어깨가 앞으로 말리면 삼각근 개입이 커지고 어깨 앞쪽 통증을 유발합니다.'
   },
-  { id: 'incline_bench_press', name: '인클라인 벤치프레스', en: 'Incline Barbell Bench Press', aka: ['인클라인 바벨 프레스'], part: '가슴', equip: '바벨', type: 'weight_reps', rest: 120, tips: [], mistake: '' },
+  { id: 'incline_bench_press', name: '인클라인 바벨 벤치프레스', en: 'Incline Barbell Bench Press', aka: ['인클라인 벤치프레스', '인클라인 바벨 프레스'], part: '가슴', equip: '바벨', type: 'weight_reps', rest: 120, tips: [], mistake: '' },
   { id: 'incline_dumbbell_press', name: '인클라인 덤벨 프레스', en: 'Incline Dumbbell Press', aka: ['인클라인 덤벨'], part: '가슴', equip: '덤벨', type: 'weight_reps', rest: 90, tips: [], mistake: '' },
   { id: 'chest_press_machine', name: '체스트 프레스 머신', en: 'Chest Press Machine', aka: ['머신 체스트 프레스'], part: '가슴', equip: '머신', type: 'weight_reps', rest: 90, tips: [], mistake: '' },
   { id: 'pec_deck_fly', name: '펙덱 플라이', en: 'Pec Deck Fly', aka: ['버터플라이', '머신 플라이'], part: '가슴', equip: '머신', type: 'weight_reps', rest: 60, tips: [], mistake: '' },
@@ -116,7 +118,7 @@ window.IRONLOG_EXERCISES = [
   { id: 'dumbbell_curl', name: '덤벨 컬', en: 'Dumbbell Curl', aka: ['이두'], part: '팔', equip: '덤벨', type: 'weight_reps', rest: 60, tips: [], mistake: '' },
   { id: 'hammer_curl', name: '해머 컬', en: 'Hammer Curl', aka: ['해머컬'], part: '팔', equip: '덤벨', type: 'weight_reps', rest: 60, tips: [], mistake: '' },
   { id: 'triceps_pushdown', name: '케이블 푸시다운', en: 'Triceps Pushdown', aka: ['트라이셉스 푸시다운', '삼두'], part: '팔', equip: '케이블', type: 'weight_reps', rest: 60, tips: [], mistake: '' },
-  { id: 'overhead_triceps_extension', name: '오버헤드 트라이셉스 익스텐션', en: 'Overhead Triceps Extension', aka: ['삼두 익스텐션'], part: '팔', equip: '덤벨', type: 'weight_reps', rest: 60, tips: [], mistake: '' },
+  { id: 'overhead_triceps_extension', name: '오버헤드 트라이셉스 익스텐션', en: 'Overhead Triceps Extension', aka: ['삼두 익스텐션'], part: '팔', equip: '덤벨', type: 'weight_reps', rest: 60, vmul: 1, tips: [], mistake: '' },
 
   // ── 코어 ──
   { id: 'plank', name: '플랭크', en: 'Plank', aka: [], part: '코어', equip: '맨몸', type: 'time', rest: 60, tips: [], mistake: '' },

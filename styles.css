@@ -170,6 +170,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .card-title { font-size: 16px; font-weight: 700; }
 .card-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; font-size: 12px; color: var(--text-2); }
 .badge { background: var(--bg-soft); border-radius: 6px; padding: 1px 6px; }
+.badge.hand { background: #fff4e6; color: #b35a00; }
 .progress { font-weight: 700; color: var(--done-line); }
 .progress.zero { color: var(--text-3); }
 .card-sets { margin-top: 6px; font-size: 13px; color: var(--text); line-height: 1.5; word-break: keep-all; }
