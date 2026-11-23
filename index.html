@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f2a44">
+  <meta name="description" content="웨이트 트레이닝 기록">
+  <title>IronLog</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 첫 화면: 달력 -->
+  <div id="home">
+    <header class="topbar">
+      <button class="icon-btn" id="prevMonth" aria-label="이전 달">‹</button>
+      <button class="month-title" id="monthTitle" aria-label="오늘로 이동"></button>
+      <button class="icon-btn" id="nextMonth" aria-label="다음 달">›</button>
+      <span class="spacer"></span>
+      <button class="chip-btn" id="goToday">오늘</button>
+      <button class="icon-btn" id="openSettings" aria-label="설정">⚙</button>
+    </header>
+    <div class="cal-head" id="calHead"></div>
+    <main class="cal-grid" id="calGrid"></main>
+    <button class="bottombar" id="bottomBar">
+      <span class="bb-arrow">⌃</span>
+      <span class="bb-text">
+        <span class="bb-date" id="bbDate"></span>
+        <span class="bb-sub" id="bbSub"></span>
+      </span>
+    </button>
+  </div>
+
+  <!-- 하루 기록 -->
+  <section class="view" id="dayView" aria-label="하루 기록"></section>
+
+  <!-- 운동 추가 -->
+  <section class="view" id="pickerView" aria-label="운동 추가">
+    <header class="viewbar">
+      <button class="icon-btn back" data-back aria-label="뒤로">←</button>
+      <h2>운동 추가</h2>
+    </header>
+    <div class="picker-tools">
+      <input type="search" id="pickerSearch" placeholder="종목 검색 (예: 벤치, 스쿼트)" autocomplete="off">
+      <div class="chips" id="pickerChips"></div>
+    </div>
+    <div class="picker-list" id="pickerList"></div>
+  </section>
+
+  <!-- 세트 입력 -->
+  <section class="view" id="setView" aria-label="세트 입력"></section>
+
+  <!-- 작은 창(설정, 종목 직접 추가) -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal-box" id="modalBox"></div>
+  </div>
+
+  <!-- 파일 고르기는 다시 그려지는 영역 밖에 둔다 -->
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="exercises.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
