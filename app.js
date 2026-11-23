@@ -1,7 +1,7 @@
 /* IronLog — 웨이트 트레이닝 기록 (1단계: 달력 · 하루 기록 · 운동 추가 · 세트 입력) */
 'use strict';
 
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.3.1';
 const STORE_KEY = 'ironlog-v1';
 const PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '유산소'];
 const PART_COLOR = {
@@ -606,7 +606,7 @@ function renderSet() {
     '<button class="head-btn" data-act="history">지난 기록</button></header>' +
     '<div class="scroll">' +
     '<div class="set-head"><span class="badge">' + esc(ex.part) + '</span><span class="badge">' + esc(ex.equip) + '</span>' +
-    '<button class="rest-btn" data-act="rest">⏱ ' + (getRest(ex) ? '쉬는 시간 ' + getRest(ex) + '초' : '타이머 없음') + '</button>' +
+    '<button class="rest-btn" data-act="rest">⏱ ' + (getRest(ex) ? '쉬는 시간 ' + restText(getRest(ex)) : '타이머 없음') + '</button>' +
     '<span class="set-stat" id="setStat"></span></div>' +
     '<div class="set-table" style="--cols:' + fields.length + '">' + rows + '</div>' +
     '<div class="set-actions"><button data-act="addSet">＋ 세트</button><button data-act="dupSet">직전 세트 복사</button>' +
@@ -666,15 +666,7 @@ $('setView').addEventListener('click', e => {
     toast('무게 단위를 ' + it.unit + '(으)로 바꿨어요. 적어 둔 숫자는 그대로예요.');
     return;
   }
-  if (act === 'rest') {
-    const v = prompt(ex.name + ' 쉬는 시간(초)을 입력하세요.\n0 이면 타이머를 쓰지 않아요.', getRest(ex));
-    if (v === null) return;
-    const n = parseInput(v);
-    if (n == null) return;
-    db.rest[ex.id] = Math.min(Math.round(n), 3600);
-    save(); renderSet();
-    return;
-  }
+  if (act === 'rest') return openRestModal('default', ex);
   if (act === 'check') {
     const s = it.sets[i];
     if (!s.done) {
@@ -688,7 +680,7 @@ $('setView').addEventListener('click', e => {
       });
       s.done = true;
       s.at = Date.now();
-      startRest(getRest(ex), (i + 1) + '세트 후 휴식 · ' + ex.name);
+      startRest(getRest(ex), (i + 1) + '세트 후 휴식 · ' + ex.name, ex.id);
     } else {
       s.done = false;
     }
@@ -737,11 +729,12 @@ function refreshPlaceholders(it) {
 }
 
 /* ───────── 쉬는 시간 타이머 (끝나는 시각 기준이라 화면이 꺼졌다 켜져도 맞음) ───────── */
-const rest = { end: 0, total: 0, iv: null, hideT: null };
+const rest = { end: 0, total: 0, iv: null, hideT: null, exId: null };
 let audioCtx = null;
 const mmss = sec => Math.floor(sec / 60) + ':' + pad(sec % 60);
-function startRest(sec, label) {
+function startRest(sec, label, exId) {
   if (!sec) return;
+  rest.exId = exId || null;
   try {                                   // 소리는 사용자가 누른 순간에 준비해야 나중에 울림
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -798,6 +791,7 @@ $('restBar').addEventListener('click', e => {
   const b = e.target.closest('[data-rest]');
   if (!b) return;
   const v = b.dataset.rest;
+  if (v === 'edit') return openRestModal('running', rest.exId ? getEx(rest.exId) : null);
   if (v === 'skip' || !rest.iv) return stopRest();
   const d = Number(v);
   rest.end = Math.max(Date.now() + 1000, rest.end + d * 1000);
@@ -805,6 +799,76 @@ $('restBar').addEventListener('click', e => {
   tickRest();
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && rest.iv) tickRest(); });
+
+/* 쉬는 시간 입력 창
+ *  default: 세트 입력 화면 ⏱ 버튼 → 이 종목 기본값 저장 / 지금 시작
+ *  running: 타이머 숫자 누름 → 남은 시간 바꾸기 (+ 기본값으로도 저장) */
+const REST_PRESETS = [30, 60, 90, 120, 150, 180, 240];
+const restText = sec => sec < 60 ? sec + '초' : Math.floor(sec / 60) + '분' + (sec % 60 ? ' ' + (sec % 60) + '초' : '');
+function openRestModal(mode, ex) {
+  const cur = mode === 'running' && rest.iv ? Math.max(0, Math.ceil((rest.end - Date.now()) / 1000)) : (ex ? getRest(ex) : 90);
+  const title = mode === 'running' ? '남은 쉬는 시간 바꾸기' : esc(ex.name) + ' 쉬는 시간';
+  let html = '<h3>' + title + '</h3>' +
+    '<div class="chips rest-chips">' + REST_PRESETS.map(v => '<button class="chip" data-sec="' + v + '">' + restText(v) + '</button>').join('') + '</div>' +
+    '<div class="row2"><label class="field">분<input id="rmMin" inputmode="numeric" maxlength="2" value="' + Math.floor(cur / 60) + '"></label>' +
+    '<label class="field">초<input id="rmSec" inputmode="numeric" maxlength="2" value="' + (cur % 60) + '"></label></div>';
+  if (mode === 'running') {
+    html += (ex ? '<label class="check-line"><input type="checkbox" id="rmKeep"> ' + esc(ex.name) + ' 기본 쉬는 시간으로도 저장</label>' : '') +
+      '<div class="modal-foot"><button data-back>취소</button><button class="ok" id="rmApply">적용</button></div>';
+  } else {
+    html += '<p class="hint">0분 0초로 저장하면 이 종목은 ✔ 해도 타이머가 켜지지 않아요.</p>' +
+      '<div class="modal-foot"><button data-back>취소</button><button id="rmStart">지금 시작</button><button class="ok" id="rmSave">저장</button></div>';
+  }
+  openModal(html);
+  const box = $('modalBox');
+  const readSec = () => {
+    const m = parseInput($('rmMin').value) || 0, sc = parseInput($('rmSec').value) || 0;
+    return Math.min(Math.round(m * 60 + sc), 3600);
+  };
+  box.querySelector('.rest-chips').onclick = e => {
+    const c = e.target.closest('[data-sec]');
+    if (!c) return;
+    const v = Number(c.dataset.sec);
+    $('rmMin').value = Math.floor(v / 60);
+    $('rmSec').value = v % 60;
+    box.querySelectorAll('.rest-chips .chip').forEach(x => x.classList.toggle('on', x === c));
+  };
+  const saveDefault = sec => {
+    if (!ex) return;
+    db.rest[ex.id] = sec;
+    save();
+  };
+  const refreshSet = () => { if ($('setView').classList.contains('open')) renderSet(); };
+  if (mode === 'running') {
+    $('rmApply').onclick = () => {
+      const sec = readSec();
+      if ($('rmKeep') && $('rmKeep').checked) saveDefault(sec);
+      afterPop = () => {
+        if (!sec) return stopRest();
+        if (rest.iv) {
+          rest.end = Date.now() + sec * 1000;
+          rest.total = sec;
+          tickRest();
+        } else startRest(sec, ex ? '휴식 · ' + ex.name : '휴식', ex && ex.id);
+        refreshSet();
+      };
+      goBack();
+    };
+  } else {
+    $('rmSave').onclick = () => {
+      const sec = readSec();
+      saveDefault(sec);
+      afterPop = () => { refreshSet(); toast(ex.name + ' 쉬는 시간: ' + (sec ? restText(sec) : '타이머 없음')); };
+      goBack();
+    };
+    $('rmStart').onclick = () => {
+      const sec = readSec();
+      if (!sec) return;
+      startRest(sec, '휴식 · ' + ex.name, ex.id);   // 누른 순간 소리 준비
+      goBack();
+    };
+  }
+}
 
 /* ───────── 종목별 지난 기록 (✔ 한 세트만) ───────── */
 function exHistory(exId) {

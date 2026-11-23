@@ -315,7 +315,13 @@ body.timer-on .restbar { display: block; }
 .rest-label { font-size: 12px; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rest-text b { font-size: 24px; font-variant-numeric: tabular-nums; }
 .rest-row button { height: 40px; padding: 0 10px; border-radius: 10px; background: rgba(255,255,255,.12); font-size: 14px; color: #fff; }
+.rest-row .rest-text { height: auto; padding: 0; background: none; border-radius: 0; text-align: left; font-size: inherit; }
+.rest-time { display: flex; align-items: baseline; gap: 6px; }
+.rest-time small { font-size: 11px; opacity: .6; white-space: nowrap; }
 .restbar.finished { background: var(--done-line); }
+.rest-chips { flex-wrap: wrap; padding-top: 0; margin-bottom: 8px; }
+.check-line { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2); margin: 4px 0 10px; }
+.check-line input { width: 20px; height: 20px; }
 .restbar.finished .rest-text b { animation: blink .6s ease-in-out 4; }
 @keyframes blink { 50% { opacity: .2; } }
 body.timer-on #home { padding-bottom: calc(64px + var(--safe-b)); }
