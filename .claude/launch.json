@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ironlog",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/serve.py", "8005"],
+      "port": 8005
+    }
+  ]
+}
