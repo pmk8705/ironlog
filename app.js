@@ -1,7 +1,7 @@
 /* IronLog — 웨이트 트레이닝 기록 (1단계: 달력 · 하루 기록 · 운동 추가 · 세트 입력) */
 'use strict';
 
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.2.0';
 const STORE_KEY = 'ironlog-v1';
 const PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '유산소'];
 const PART_COLOR = {
@@ -36,10 +36,13 @@ function dateLabel(s) {
 }
 
 /* ───────── 저장 ───────── */
-function emptyDb() { return { version: 1, days: {}, custom: [] }; }
+function emptyDb() { return { version: 1, days: {}, custom: [], favs: [] }; }
 function normalize(o) {
   if (!o || typeof o !== 'object') o = {};
-  const db = { version: 1, days: {}, custom: Array.isArray(o.custom) ? o.custom : [] };
+  const db = {
+    version: 1, days: {}, custom: Array.isArray(o.custom) ? o.custom : [],
+    favs: Array.isArray(o.favs) ? o.favs.filter(x => typeof x === 'string') : []
+  };
   const days = (o.days && typeof o.days === 'object') ? o.days : {};
   Object.keys(days).forEach(k => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
@@ -432,13 +435,14 @@ function lastByExercise() {
   return map;
 }
 function renderPicker() {
-  $('pickerChips').innerHTML = ['전체'].concat(PARTS).map(p =>
-    '<button class="chip' + (p === pickerPart ? ' on' : '') + '" data-part="' + p + '">' + p + '</button>').join('');
+  $('pickerChips').innerHTML = ['전체', '즐겨찾기'].concat(PARTS).map(p =>
+    '<button class="chip' + (p === pickerPart ? ' on' : '') + '" data-part="' + p + '">' + (p === '즐겨찾기' ? '★ 즐겨찾기' : p) + '</button>').join('');
 
   const q = $('pickerSearch').value.trim().toLowerCase().replace(/\s+/g, '');
   const all = (window.IRONLOG_EXERCISES || []).concat(db.custom);
   const match = e => {
-    if (pickerPart !== '전체' && e.part !== pickerPart) return false;
+    if (pickerPart === '즐겨찾기') { if (db.favs.indexOf(e.id) < 0) return false; }
+    else if (pickerPart !== '전체' && e.part !== pickerPart) return false;
     if (!q) return true;
     const hay = [e.name, e.en].concat(e.aka || []).join('|').toLowerCase().replace(/\s+/g, '');
     return hay.indexOf(q) >= 0;
@@ -446,14 +450,27 @@ function renderPicker() {
   const last = lastByExercise();
   const row = e => {
     const l = last[e.id];
-    return '<button class="ex-row" data-ex="' + esc(e.id) + '" style="--pc:' + (PART_COLOR[e.part] || PART_COLOR['기타']) + '">' +
+    const fav = db.favs.indexOf(e.id) >= 0;
+    return '<div class="ex-row" style="--pc:' + (PART_COLOR[e.part] || PART_COLOR['기타']) + '">' +
+      '<button class="ex-main" data-ex="' + esc(e.id) + '">' +
       '<span class="ex-dot"></span><span class="ex-name">' + esc(e.name) +
       '<small>' + esc(e.part) + ' · ' + esc(e.equip) + (e.custom ? ' · 내 종목' : '') + '</small></span>' +
-      (l ? '<span class="ex-last">' + esc(fmtSet(e.type, l.set)) + '</span>' : '') + '</button>';
+      (l ? '<span class="ex-last">' + esc(fmtSet(e.type, l.set)) + '</span>' : '') + '</button>' +
+      '<button class="star' + (fav ? ' on' : '') + '" data-fav="' + esc(e.id) + '" aria-label="즐겨찾기">' + (fav ? '★' : '☆') + '</button></div>';
   };
 
   let html = '';
+  if (pickerPart === '즐겨찾기') {
+    const list = db.favs.map(id => exMap[id]).filter(e => e && match(e));
+    html = list.length ? '<div class="group-title">★ 즐겨찾기</div>' + list.map(row).join('')
+      : '<div class="empty">즐겨찾기한 종목이 없어요.<br>종목 오른쪽 ☆ 를 누르면 여기에 모여요.</div>';
+    html += '<button class="ex-row add" data-act="custom">＋ 종목 직접 추가</button>';
+    $('pickerList').innerHTML = html;
+    return;
+  }
   if (!q && pickerPart === '전체') {
+    const favList = db.favs.map(id => exMap[id]).filter(Boolean);
+    if (favList.length) html += '<div class="group-title">★ 즐겨찾기</div>' + favList.map(row).join('');
     const recent = Object.keys(last).sort((a, b) => last[b].date.localeCompare(last[a].date)).slice(0, 8)
       .map(id => exMap[id]).filter(Boolean);
     if (recent.length) html += '<div class="group-title">최근 한 운동</div>' + recent.map(row).join('');
@@ -476,7 +493,18 @@ $('pickerChips').addEventListener('click', e => {
 });
 $('pickerList').addEventListener('click', e => {
   if (e.target.closest('[data-act="custom"]')) return openCustomForm();
-  const r = e.target.closest('.ex-row[data-ex]');
+  const star = e.target.closest('[data-fav]');
+  if (star) {
+    const id = star.dataset.fav, k = db.favs.indexOf(id);
+    if (k >= 0) db.favs.splice(k, 1); else db.favs.push(id);
+    save();
+    const top = $('pickerList').scrollTop;
+    renderPicker();
+    $('pickerList').scrollTop = top;
+    toast(k >= 0 ? '즐겨찾기에서 뺐어요' : '즐겨찾기에 넣었어요');
+    return;
+  }
+  const r = e.target.closest('.ex-main[data-ex]');
   if (r) addExercise(r.dataset.ex);
 });
 
@@ -554,7 +582,8 @@ function renderSet() {
   });
 
   $('setView').innerHTML =
-    '<header class="viewbar"><button class="icon-btn back" data-back aria-label="뒤로">←</button><h2>' + esc(ex.name) + '</h2></header>' +
+    '<header class="viewbar"><button class="icon-btn back" data-back aria-label="뒤로">←</button><h2>' + esc(ex.name) + '</h2>' +
+    '<button class="head-btn" data-act="history">지난 기록</button></header>' +
     '<div class="scroll">' +
     '<div class="set-head"><span class="badge">' + esc(ex.part) + '</span><span class="badge">' + esc(ex.equip) + '</span>' +
     '<span class="set-stat" id="setStat"></span></div>' +
@@ -605,6 +634,7 @@ $('setView').addEventListener('click', e => {
   const i = rowEl ? Number(rowEl.dataset.i) : -1;
   const act = b.dataset.act;
 
+  if (act === 'history') return openHistory(it.ex);
   if (act === 'check') {
     const s = it.sets[i];
     if (!s.done) {
@@ -661,6 +691,56 @@ function refreshPlaceholders(it) {
     const i = Number(inp.closest('.set-row').dataset.i);
     inp.placeholder = placeholderFor(it, prev, i, inp.dataset.f);
   });
+}
+
+/* ───────── 종목별 지난 기록 (✔ 한 세트만) ───────── */
+function exHistory(exId) {
+  return Object.keys(db.days).sort().reverse().map(k => {
+    const sets = [];
+    db.days[k].items.forEach(it => { if (it.ex === exId) it.sets.forEach(s => { if (s.done) sets.push(s); }); });
+    return { date: k, sets: sets };
+  }).filter(h => h.sets.length);
+}
+/* 기록 방식별 “최고” 기준 값 */
+function bestKey(type, s) {
+  if (type === 'weight_reps') return num(s.w) * 1000 + num(s.r);   // 무게 우선, 같으면 횟수
+  if (type === 'reps') return num(s.r);
+  if (type === 'time') return num(s.sec);
+  return num(s.km) * 1000 + num(s.min);
+}
+const BEST_LABEL = { weight_reps: '최고 무게', reps: '최고 횟수', time: '최장 시간', distance_time: '최장 거리' };
+
+function openHistory(exId) {
+  const ex = getEx(exId);
+  const hist = exHistory(exId);
+  const today = todayStr();
+  let best = null;
+  hist.forEach(h => h.sets.forEach(s => { if (!best || bestKey(ex.type, s) > bestKey(ex.type, best)) best = s; }));
+  const bestK = best ? bestKey(ex.type, best) : -1;
+
+  let html = '<header class="viewbar"><button class="icon-btn back" data-back aria-label="뒤로">←</button>' +
+    '<h2>' + esc(ex.name) + ' 기록</h2></header><div class="scroll">' +
+    '<div class="summary">' +
+    '<div><span class="k">기록한 날</span><span class="v">' + hist.length + '<small>일</small></span></div>' +
+    '<div><span class="k">' + BEST_LABEL[ex.type] + '</span><span class="v" style="font-size:17px">' + (best ? esc(fmtSet(ex.type, best)) : '-') + '</span></div>' +
+    '<div><span class="k">마지막</span><span class="v" style="font-size:17px">' + (hist.length ? hist[0].date.slice(5).replace('-', '/') : '-') + '</span></div>' +
+    '</div>';
+
+  if (!hist.length) html += '<div class="empty"><b>아직 기록이 없어요</b>✔ 한 세트가 있는 날만 여기에 나와요.</div>';
+  hist.forEach(h => {
+    const vol = h.sets.reduce((a, s) => a + setVolume(ex, s), 0);
+    const hasBest = h.sets.some(s => bestKey(ex.type, s) === bestK);
+    const d = parseYmd(h.date);
+    html += '<div class="hist-row"><div class="hist-top">' +
+      '<span class="hist-date' + (h.date === today ? ' today-mark' : '') + '">' + h.date.replace(/-/g, '.') + ' (' + WEEKDAYS[d.getDay()] + ')</span>' +
+      (hasBest ? '<span class="pr">최고</span>' : '') +
+      '<span class="hist-sum">' + h.sets.length + '세트' + (vol > 0 ? ' · ' + vol.toLocaleString() + 'kg' : '') + '</span></div>' +
+      '<div class="hist-sets">' + h.sets.map(s => '<span class="' + (bestKey(ex.type, s) === bestK ? 'best' : '') + '">' + esc(fmtSet(ex.type, s)) + '</span>').join(' · ') + '</div></div>';
+  });
+  html += '</div>';
+  $('histView').innerHTML = html;
+  openLayer($('histView'));
+  $('histView').querySelector('.scroll').scrollTop = 0;
 }
 
 /* ───────── 설정 · 백업 ───────── */

@@ -120,6 +120,21 @@ input, select, textarea { font: inherit; color: inherit; }
 .view.open { transform: none; visibility: visible; }
 #pickerView { z-index: 20; }
 #setView { z-index: 30; }
+#histView { z-index: 40; }
+.head-btn {
+  flex: none; height: 34px; padding: 0 12px; border-radius: 17px;
+  background: #e7efff; color: var(--primary); font-size: 14px; font-weight: 600;
+}
+
+/* 지난 기록 */
+.hist-row { border-bottom: 1px solid var(--line); padding: 12px 4px; }
+.hist-top { display: flex; align-items: baseline; gap: 8px; }
+.hist-date { font-weight: 700; color: var(--navy); }
+.hist-date.today-mark::after { content: "오늘"; font-size: 11px; color: #fff; background: var(--primary); border-radius: 8px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; }
+.hist-sum { margin-left: auto; font-size: 13px; color: var(--text-2); white-space: nowrap; }
+.hist-sets { margin-top: 4px; font-size: 14px; line-height: 1.6; word-break: keep-all; }
+.hist-sets .best { color: var(--accent); font-weight: 700; }
+.pr { font-size: 11px; color: #fff; background: var(--accent); border-radius: 8px; padding: 0 6px; }
 
 .viewbar {
   display: flex; align-items: center; gap: 6px; flex: none;
@@ -202,9 +217,16 @@ input, select, textarea { font: inherit; color: inherit; }
 .group-title { font-size: 12px; color: var(--text-2); padding: 12px 16px 4px; font-weight: 700; }
 .ex-row {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  padding: 12px 16px; border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
-.ex-row:active { background: var(--bg-soft); }
+.ex-main {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left;
+  padding: 12px 0 12px 16px;
+}
+.ex-main:active { background: var(--bg-soft); }
+.star { flex: none; width: 48px; height: 48px; font-size: 22px; color: #c3c9d4; }
+.star.on { color: #f5a623; }
+.ex-row.add { padding: 14px 16px; }
 .ex-dot { width: 8px; height: 8px; border-radius: 4px; background: var(--pc, var(--text-3)); flex: none; }
 .ex-name { flex: 1; min-width: 0; }
 .ex-name small { display: block; font-size: 12px; color: var(--text-2); }
