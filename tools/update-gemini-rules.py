@@ -1,6 +1,6 @@
 """Refresh sections 4 (exercises by part) and 5 (exercises without tips) of the Gemini rule file
 from exercises.js.  Usage (project folder):  python tools/update-gemini-rules.py [version]
-The rule file (gemini-ironlog-trainer.md) is PC-only (git-excluded)."""
+The rule file (운동데이터규칙.md, same name as in the Gemini skill) is PC-only (git-excluded)."""
 import io
 import os
 import re
@@ -8,7 +8,7 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 SRC = os.path.join(ROOT, 'exercises.js')
-RULES = os.path.join(ROOT, 'gemini-ironlog-trainer.md')
+RULES = os.path.join(ROOT, '운동데이터규칙.md')
 ORDER = [('가슴', ['가슴']), ('등', ['등', '승모근', '허리']), ('어깨', ['어깨']), ('팔', ['이두', '삼두', '전완']),
          ('코어', ['복부']), ('하체', ['허벅지', '엉덩이', '종아리']), ('유산소', [''])]
 
