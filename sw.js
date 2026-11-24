@@ -1,5 +1,5 @@
 /* IronLog 서비스 워커: 네트워크 우선 → 실패하면 캐시 (정적 파일을 바꾸면 CACHE 숫자를 올린다) */
-const CACHE = 'ironlog-cache-9';
+const CACHE = 'ironlog-cache-10';
 const FILES = [
   './', './index.html', './styles.css', './app.js', './exercises.js',
   './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',
