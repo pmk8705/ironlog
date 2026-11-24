@@ -1,7 +1,7 @@
 /* IronLog — 웨이트 트레이닝 기록 (1단계: 달력 · 하루 기록 · 운동 추가 · 세트 입력) */
 'use strict';
 
-const APP_VERSION = '0.5.0';
+const APP_VERSION = '0.5.1';
 const STORE_KEY = 'ironlog-v1';
 const PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '유산소'];
 const PART_COLOR = {
@@ -133,6 +133,7 @@ function dayStats(date) {
   day.items.forEach(it => {
     const ex = getEx(it.ex);
     it.sets.forEach(s => {
+      if (s.warmup) return;            // 웜업은 세트 수·볼륨·부위에서 뺀다
       st.planned++;
       if (!s.done) return;
       st.sets++;
@@ -171,6 +172,7 @@ function fmtSet(type, s, unit) {
 function cloneSetAsPlan(type, s) {
   const o = { done: false };
   FIELDS[type].forEach(f => { o[f[0]] = s[f[0]] == null ? null : s[f[0]]; });
+  if (s.warmup) o.warmup = true;
   if (typeof s.rest === 'number') o.rest = s.rest;   // 세트별 휴식도 함께 복사
   return o;
 }
@@ -351,13 +353,15 @@ function renderDay() {
   }
   items.forEach(it => {
     const ex = getEx(it.ex);
-    const done = it.sets.filter(s => s.done).length;
-    const setsTxt = it.sets.map(s => '<span class="' + (s.done ? '' : 'plan') + '">' + esc(fmtSet(ex.type, s, it.unit)) + '</span>').join(' · ');
+    const work = it.sets.filter(s => !s.warmup);
+    const done = work.filter(s => s.done).length;
+    const setsTxt = it.sets.map(s => '<span class="' + (s.warmup ? 'warm' : s.done ? '' : 'plan') + '">' + (s.warmup ? 'W ' : '') + esc(fmtSet(ex.type, s, it.unit)) + '</span>').join(' · ');
     html += '<div class="card" style="--pc:' + (PART_COLOR[ex.part] || PART_COLOR['기타']) + '">' +
       '<button class="card-main" data-act="open" data-id="' + it.id + '">' +
       '<div class="card-title">' + esc(ex.name) + '</div>' +
       '<div class="card-meta"><span class="badge">' + esc(ex.part) + '</span><span class="badge">' + esc(ex.equip) + '</span>' +
-      '<span class="progress' + (done ? '' : ' zero') + '">✔ ' + done + ' / ' + it.sets.length + ' 세트</span></div>' +
+      '<span class="progress' + (done ? '' : ' zero') + '">✔ ' + done + ' / ' + work.length + ' 세트</span>' +
+      (it.sets.length > work.length ? '<span class="badge warm">웜업 ' + (it.sets.length - work.length) + '</span>' : '') + '</div>' +
       (it.sets.length ? '<div class="card-sets">' + setsTxt + '</div>' : '') +
       (it.memo ? '<div class="card-meta">📝 ' + esc(it.memo) + '</div>' : '') +
       '</button><div class="card-side">' +
@@ -480,7 +484,7 @@ function lastByExercise() {
   const map = {};
   Object.keys(db.days).sort().forEach(k => {
     db.days[k].items.forEach(it => {
-      const done = it.sets.filter(s => s.done);
+      const done = it.sets.filter(s => s.done && !s.warmup);
       if (done.length) map[it.ex] = { date: k, set: done[done.length - 1], unit: it.unit };
     });
   });
@@ -713,9 +717,9 @@ function renderSet() {
       ? '<span><button class="unit-btn" data-act="unit" aria-label="무게 단위 바꾸기">' + (it.unit === 'lb' ? 'lb' : 'kg') + ' ⇄</button></span>'
       : '<span>' + f[1] + '</span>').join('') + '<span>✔</span></div>';
   it.sets.forEach((s, i) => {
-    const p = prev && prev.sets[i];
+    const p = prevMatch(it, prev, i);
     rows += '<div class="set-row' + (s.done ? ' done' : '') + '" data-i="' + i + '">' +
-      '<span class="set-no">' + (i + 1) + '</span>' +
+      '<button class="set-no' + (s.warmup ? ' warm' : '') + '" data-act="warm" aria-label="웜업으로 바꾸기">' + setLabel(it, i) + '</button>' +
       '<button class="prev-btn" data-act="prev"' + (p ? '' : ' disabled') + '>' + (p ? esc(fmtSet(ex.type, p, prev.unit)) : '-') + '</button>' +
       fields.map(f => '<input data-f="' + f[0] + '" inputmode="decimal" enterkeyhint="next" value="' +
         (s[f[0]] == null ? '' : esc(s[f[0]])) + '" placeholder="' + esc(placeholderFor(it, prev, i, f[0])) + '">').join('') +
@@ -741,15 +745,33 @@ function renderSet() {
     '<button class="del" data-act="removeSet">− 마지막</button></div>' +
     '<input class="memo" id="setMemo" maxlength="80" placeholder="메모 (예: 그립 넓게, 어깨 살짝 불편)" value="' + esc(it.memo) + '">' +
     '<p class="hint">' + (prev ? '이전 기록: ' + dateLabel(prev.date) + '. ' : '') +
-    '“이전” 칸을 누르면 그 기록이 그대로 들어가요. 빈 칸으로 ✔ 를 누르면 흐린 숫자가 들어가요.<br>✔ 누른 세트만 달력과 통계에 반영돼요.</p>' +
+    '“이전” 칸을 누르면 그 기록이 그대로 들어가요. 빈 칸으로 ✔ 를 누르면 흐린 숫자가 들어가요.<br>세트 번호를 누르면 웜업(W)으로 바뀌어요. 웜업은 세트 수·볼륨에서 빠져요.<br>✔ 누른 본세트만 달력과 통계에 반영돼요.</p>' +
     '</div>';
   updateSetStat();
 }
 
+/* 이전 기록에서 i번째 세트의 짝: 웜업은 웜업끼리, 본세트는 본세트끼리 순서대로 */
+function prevMatch(it, prev, i) {
+  if (!prev) return null;
+  const warm = !!it.sets[i].warmup;
+  let k = 0;
+  for (let j = 0; j < i; j++) if (!!it.sets[j].warmup === warm) k++;
+  return prev.sets.filter(s => !!s.warmup === warm)[k] || null;
+}
+
+/* 세트 번호: 웜업은 W, 본세트는 웜업을 빼고 1, 2, 3… */
+function setLabel(it, i) {
+  if (it.sets[i].warmup) return 'W';
+  let n = 0;
+  for (let k = 0; k <= i; k++) if (!it.sets[k].warmup) n++;
+  return String(n);
+}
+
 function placeholderFor(it, prev, i, f) {
   if (i > 0 && it.sets[i - 1][f] != null) return fmt(it.sets[i - 1][f]);
-  if (prev && prev.sets[i] && prev.sets[i][f] != null) {
-    const v = prev.sets[i][f];
+  const pm = prevMatch(it, prev, i);
+  if (pm && pm[f] != null) {
+    const v = pm[f];
     return fmt(f === 'w' ? convertWeight(v, prev.unit, it.unit) : v);
   }
   return '';
@@ -759,9 +781,10 @@ function updateSetStat() {
   const it = curItem();
   if (!it || !$('setStat')) return;
   const ex = getEx(it.ex);
-  const done = it.sets.filter(s => s.done);
+  const work = it.sets.filter(s => !s.warmup);
+  const done = work.filter(s => s.done);
   const vol = done.reduce((a, s) => a + setVolume(ex, s, it.unit), 0);
-  $('setStat').textContent = (ex.type === 'weight_reps' ? Math.round(vol).toLocaleString() + 'kg · ' : '') + '✔ ' + done.length + ' / ' + it.sets.length + ' 세트';
+  $('setStat').textContent = (ex.type === 'weight_reps' ? Math.round(vol).toLocaleString() + 'kg · ' : '') + '✔ ' + done.length + ' / ' + work.length + ' 세트';
 }
 
 $('setView').addEventListener('input', e => {
@@ -787,6 +810,16 @@ $('setView').addEventListener('click', e => {
   const act = b.dataset.act;
 
   if (act === 'history') return openHistory(it.ex);
+  if (act === 'warm') {
+    const s = it.sets[i];
+    if (s.warmup) delete s.warmup; else s.warmup = true;
+    save();
+    const sc = $('setView').querySelector('.scroll').scrollTop;
+    renderSet();
+    $('setView').querySelector('.scroll').scrollTop = sc;
+    toast(s.warmup ? (i + 1) + '번째 줄을 웜업으로 바꿨어요 (볼륨·세트 수에서 빠져요)' : '본세트로 바꿨어요');
+    return;
+  }
   if (act === 'tips') return openTips(ex);
   if (act === 'unit') {
     it.unit = it.unit === 'lb' ? 'kg' : 'lb';
@@ -822,7 +855,7 @@ $('setView').addEventListener('click', e => {
   }
   if (act === 'prev') {
     const prev = prevSets(it.ex, curDate);
-    const p = prev && prev.sets[i];
+    const p = prevMatch(it, prev, i);
     if (!p) return;
     fields.forEach(f => {
       let v = p[f[0]] == null ? null : p[f[0]];
@@ -1057,7 +1090,7 @@ function openHistory(exId) {
   const hist = exHistory(exId);
   const today = todayStr();
   let best = null;
-  hist.forEach(h => h.sets.forEach(s => { if (!best || bestKey(ex.type, s) > bestKey(ex.type, best)) best = s; }));
+  hist.forEach(h => h.sets.forEach(s => { if (!s.warmup && (!best || bestKey(ex.type, s) > bestKey(ex.type, best))) best = s; }));
   const bestK = best ? bestKey(ex.type, best) : -1;
 
   let html = '<header class="viewbar"><button class="icon-btn back" data-back aria-label="뒤로">←</button>' +
@@ -1070,14 +1103,15 @@ function openHistory(exId) {
 
   if (!hist.length) html += '<div class="empty"><b>아직 기록이 없어요</b>✔ 한 세트가 있는 날만 여기에 나와요.</div>';
   hist.forEach(h => {
-    const vol = h.sets.reduce((a, s) => a + setVolume(ex, s, s.u), 0);
-    const hasBest = h.sets.some(s => bestKey(ex.type, s) === bestK);
+    const work = h.sets.filter(s => !s.warmup);
+    const vol = work.reduce((a, s) => a + setVolume(ex, s, s.u), 0);
+    const hasBest = work.some(s => bestKey(ex.type, s) === bestK);
     const d = parseYmd(h.date);
     html += '<div class="hist-row"><div class="hist-top">' +
       '<span class="hist-date' + (h.date === today ? ' today-mark' : '') + '">' + h.date.replace(/-/g, '.') + ' (' + WEEKDAYS[d.getDay()] + ')</span>' +
       (hasBest ? '<span class="pr">최고</span>' : '') +
-      '<span class="hist-sum">' + h.sets.length + '세트' + (vol > 0 ? ' · ' + vol.toLocaleString() + 'kg' : '') + '</span></div>' +
-      '<div class="hist-sets">' + h.sets.map(s => '<span class="' + (bestKey(ex.type, s) === bestK ? 'best' : '') + '">' + esc(fmtSet(ex.type, s, s.u)) + '</span>').join(' · ') + '</div></div>';
+      '<span class="hist-sum">' + work.length + '세트' + (vol > 0 ? ' · ' + vol.toLocaleString() + 'kg' : '') + '</span></div>' +
+      '<div class="hist-sets">' + h.sets.map(s => '<span class="' + (s.warmup ? 'warm' : bestKey(ex.type, s) === bestK ? 'best' : '') + '">' + (s.warmup ? 'W ' : '') + esc(fmtSet(ex.type, s, s.u)) + '</span>').join(' · ') + '</div></div>';
   });
   html += '</div>';
   $('histView').innerHTML = html;

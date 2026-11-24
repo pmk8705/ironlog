@@ -415,3 +415,10 @@ body.timer-on .pk-tray { padding-bottom: calc(74px + var(--safe-b)); }
 .tip-list li::marker { color: var(--primary); font-weight: 700; }
 .tip-warn { background: #fff1f0; border-left: 4px solid var(--danger); border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.6; color: #7a1f1f; margin-bottom: 8px; }
 .tip-warn b { display: block; color: var(--danger); margin-bottom: 2px; }
+
+/* 웜업 세트 */
+button.set-no { height: 40px; border-radius: 8px; font-size: 15px; background: none; }
+button.set-no:active { background: #e8f5ec; }
+.set-no.warm { color: var(--done-line); font-weight: 800; background: #e8f5ec; }
+.card-sets .warm, .hist-sets .warm { color: var(--done-line); opacity: .75; }
+.badge.warm { background: #e8f5ec; color: var(--done-line); }
