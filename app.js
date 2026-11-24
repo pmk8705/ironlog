@@ -115,6 +115,8 @@ function convertWeight(w, from, to) {
 /* 볼륨 배수: 덤벨은 한 손 무게를 적으므로 ×2 (덤벨 하나를 두 손으로 드는 종목은 vmul: 1) */
 function volMul(ex) { return typeof ex.vmul === 'number' ? ex.vmul : (ex.equip === '덤벨' ? 2 : 1); }
 function setVolume(ex, s, unit) { return ex.type === 'weight_reps' ? toKg(s.w, unit) * num(s.r) * volMul(ex) : 0; }
+/* 세트 뒤 휴식: 세트에 따로 정한 값(s.rest)이 있으면 그것, 없으면 종목 기본값 */
+function setRest(ex, s) { return s && typeof s.rest === 'number' ? s.rest : getRest(ex); }
 function getRest(ex) { const r = db.rest[ex.id]; return typeof r === 'number' ? r : (typeof ex.rest === 'number' ? ex.rest : 90); }
 
 function dayMinutes(day) {
@@ -169,6 +171,7 @@ function fmtSet(type, s, unit) {
 function cloneSetAsPlan(type, s) {
   const o = { done: false };
   FIELDS[type].forEach(f => { o[f[0]] = s[f[0]] == null ? null : s[f[0]]; });
+  if (typeof s.rest === 'number') o.rest = s.rest;   // 세트별 휴식도 함께 복사
   return o;
 }
 
@@ -606,6 +609,11 @@ function renderSet() {
       fields.map(f => '<input data-f="' + f[0] + '" inputmode="decimal" enterkeyhint="next" value="' +
         (s[f[0]] == null ? '' : esc(s[f[0]])) + '" placeholder="' + esc(placeholderFor(it, prev, i, f[0])) + '">').join('') +
       '<button class="check" data-act="check" aria-label="' + (i + 1) + '세트 완료">✔</button></div>';
+    if (ex.type !== 'distance_time') {
+      const r = setRest(ex, s);
+      rows += '<button class="rest-line' + (typeof s.rest === 'number' ? ' own' : '') + '" data-act="setRest" data-i="' + i + '" aria-label="' + (i + 1) + '세트 뒤 쉬는 시간">' +
+        '<span>⏱ ' + (r ? mmss(r) : '쉬지 않음') + '</span></button>';
+    }
   });
 
   $('setView').innerHTML =
@@ -663,7 +671,7 @@ $('setView').addEventListener('click', e => {
   const ex = getEx(it.ex);
   const fields = FIELDS[ex.type] || FIELDS.weight_reps;
   const rowEl = b.closest('.set-row');
-  const i = rowEl ? Number(rowEl.dataset.i) : -1;
+  const i = rowEl ? Number(rowEl.dataset.i) : (b.dataset.i != null ? Number(b.dataset.i) : -1);
   const act = b.dataset.act;
 
   if (act === 'history') return openHistory(it.ex);
@@ -675,6 +683,7 @@ $('setView').addEventListener('click', e => {
     return;
   }
   if (act === 'rest') return openRestModal('default', ex);
+  if (act === 'setRest') return openRestModal('set', ex, { item: it, i: i });
   if (act === 'check') {
     const s = it.sets[i];
     if (!s.done) {
@@ -688,7 +697,7 @@ $('setView').addEventListener('click', e => {
       });
       s.done = true;
       s.at = Date.now();
-      startRest(getRest(ex), (i + 1) + '세트 후 휴식 · ' + ex.name, ex.id);
+      startRest(setRest(ex, s), (i + 1) + '세트 후 휴식 · ' + ex.name, ex.id);
     } else {
       s.done = false;
     }
@@ -813,14 +822,20 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && re
  *  running: 타이머 숫자 누름 → 남은 시간 바꾸기 (+ 기본값으로도 저장) */
 const REST_PRESETS = [30, 60, 90, 120, 150, 180, 240];
 const restText = sec => sec < 60 ? sec + '초' : Math.floor(sec / 60) + '분' + (sec % 60 ? ' ' + (sec % 60) + '초' : '');
-function openRestModal(mode, ex) {
-  const cur = mode === 'running' && rest.iv ? Math.max(0, Math.ceil((rest.end - Date.now()) / 1000)) : (ex ? getRest(ex) : 90);
-  const title = mode === 'running' ? '남은 쉬는 시간 바꾸기' : esc(ex.name) + ' 쉬는 시간';
+function openRestModal(mode, ex, ctx) {
+  const setObj = mode === 'set' ? ctx.item.sets[ctx.i] : null;
+  const cur = mode === 'running' && rest.iv ? Math.max(0, Math.ceil((rest.end - Date.now()) / 1000))
+    : mode === 'set' ? setRest(ex, setObj) : (ex ? getRest(ex) : 90);
+  const title = mode === 'running' ? '남은 쉬는 시간 바꾸기'
+    : mode === 'set' ? (ctx.i + 1) + '세트 뒤 쉬는 시간' : esc(ex.name) + ' 기본 쉬는 시간';
   let html = '<h3>' + title + '</h3>' +
     '<div class="chips rest-chips">' + REST_PRESETS.map(v => '<button class="chip" data-sec="' + v + '">' + restText(v) + '</button>').join('') + '</div>' +
     '<div class="row2"><label class="field">분<input id="rmMin" inputmode="numeric" maxlength="2" value="' + Math.floor(cur / 60) + '"></label>' +
     '<label class="field">초<input id="rmSec" inputmode="numeric" maxlength="2" value="' + (cur % 60) + '"></label></div>';
-  if (mode === 'running') {
+  if (mode === 'set') {
+    html += '<p class="hint">이 세트 뒤에만 적용돼요. 종목 기본값은 ' + (getRest(ex) ? restText(getRest(ex)) : '타이머 없음') + '이에요.</p>' +
+      '<div class="modal-foot"><button data-back>취소</button><button id="rmReset">기본값으로</button><button class="ok" id="rmSetSave">저장</button></div>';
+  } else if (mode === 'running') {
     html += (ex ? '<label class="check-line"><input type="checkbox" id="rmKeep"> ' + esc(ex.name) + ' 기본 쉬는 시간으로도 저장</label>' : '') +
       '<div class="modal-foot"><button data-back>취소</button><button class="ok" id="rmApply">적용</button></div>';
   } else {
@@ -846,8 +861,27 @@ function openRestModal(mode, ex) {
     db.rest[ex.id] = sec;
     save();
   };
-  const refreshSet = () => { if ($('setView').classList.contains('open')) renderSet(); };
-  if (mode === 'running') {
+  const refreshSet = () => {
+    if (!$('setView').classList.contains('open')) return;
+    const sc = $('setView').querySelector('.scroll');
+    const top = sc ? sc.scrollTop : 0;
+    renderSet();
+    $('setView').querySelector('.scroll').scrollTop = top;
+  };
+  if (mode === 'set') {
+    $('rmSetSave').onclick = () => {
+      setObj.rest = readSec();
+      save();
+      afterPop = refreshSet;
+      goBack();
+    };
+    $('rmReset').onclick = () => {
+      delete setObj.rest;
+      save();
+      afterPop = refreshSet;
+      goBack();
+    };
+  } else if (mode === 'running') {
     $('rmApply').onclick = () => {
       const sec = readSec();
       if ($('rmKeep') && $('rmKeep').checked) saveDefault(sec);
