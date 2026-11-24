@@ -38,7 +38,9 @@ for e in items:
     if re.search(r"id: '" + re.escape(e['id']) + "'", s):
         print('skip (exists):', e['id'])
         continue
-    m = re.search(r"\n  \{ ?\n? *id: '" + re.escape(e['after']) + r"'.*?\n  \},?(?=\n)|\n  \{ id: '" + re.escape(e['after']) + r"'[^\n]*", s, re.S)
+    # one-line entry first, then a multi-line entry ("  {\n    id: ...\n  },")
+    m = (re.search(r"\n  \{ id: '" + re.escape(e['after']) + r"'[^\n]*", s)
+         or re.search(r"\n  \{\n +id: '" + re.escape(e['after']) + r"'.*?\n  \},?(?=\n)", s, re.S))
     if not m:
         sys.exit('anchor not found: ' + e['after'])
     end = m.end()

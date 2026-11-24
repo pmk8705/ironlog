@@ -1,7 +1,7 @@
 /* IronLog — 웨이트 트레이닝 기록 (1단계: 달력 · 하루 기록 · 운동 추가 · 세트 입력) */
 'use strict';
 
-const APP_VERSION = '0.4.1';
+const APP_VERSION = '0.5.0';
 const STORE_KEY = 'ironlog-v1';
 const PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '유산소'];
 const PART_COLOR = {
@@ -1125,17 +1125,45 @@ $('importFile').addEventListener('change', e => {
     try { o = JSON.parse(r.result); } catch (err) { toast('백업 파일을 읽을 수 없어요'); return; }
     const src = o && o.data ? o.data : o;
     if (!src || typeof src.days !== 'object') { toast('IronLog 백업 파일이 아니에요'); return; }
-    const next = normalize(src);
-    if (!confirm('백업의 운동한 날 ' + Object.keys(next.days).length + '일로 지금 기록을 바꿀까요?')) return;
-    db = next;
-    rebuildExMap();
-    save();
-    if (stack.length) goBack();
-    renderCalendar();
-    toast('백업을 불러왔어요');
+    askImport(normalize(src));
   };
   r.readAsText(f);
 });
+
+/* 가져오기 방법 고르기: 합치기(지금 기록은 그대로, 없는 날만 더함) / 전부 바꾸기 */
+function askImport(next) {
+  const nDays = Object.keys(next.days).length;
+  const clash = Object.keys(next.days).filter(k => db.days[k]).length;
+  const html = '<h3>백업 가져오기</h3>' +
+    '<p class="hint" style="margin-top:0">백업 파일에 운동한 날 <b>' + nDays + '일</b>이 있어요.' +
+    (clash ? ' 그중 <b>' + clash + '일</b>은 지금 앱에도 기록이 있어요.' : '') + '</p>' +
+    '<button class="menu-btn" id="impMerge">기존 기록에 합치기<small>지금 기록은 그대로 두고, 없는 날만 더해요.' +
+    (clash ? ' 겹치는 ' + clash + '일은 지금 기록을 남겨요.' : '') + '</small></button>' +
+    '<button class="menu-btn" id="impReplace">전부 바꾸기<small>지금 기록을 지우고 백업 내용으로 바꿔요.</small></button>' +
+    '<div class="modal-foot"><button data-back>취소</button></div>';
+  if ($('modal').classList.contains('open')) $('modalBox').innerHTML = html;
+  else openModal(html);
+  const finish = msg => {
+    rebuildExMap();
+    save();
+    afterPop = () => { renderCalendar(); toast(msg); };
+    goBack();
+  };
+  $('impMerge').onclick = () => {
+    let added = 0;
+    Object.keys(next.days).forEach(k => { if (!db.days[k]) { db.days[k] = next.days[k]; added++; } });
+    next.custom.forEach(c => { if (!db.custom.some(x => x.id === c.id)) db.custom.push(c); });
+    next.favs.forEach(id => { if (db.favs.indexOf(id) < 0) db.favs.push(id); });
+    Object.keys(next.units).forEach(k => { if (!(k in db.units)) db.units[k] = next.units[k]; });
+    Object.keys(next.rest).forEach(k => { if (!(k in db.rest)) db.rest[k] = next.rest[k]; });
+    finish(added + '일 기록을 더했어요' + (nDays - added ? ' (겹친 ' + (nDays - added) + '일은 그대로)' : ''));
+  };
+  $('impReplace').onclick = () => {
+    if (!confirm('지금 기록을 모두 지우고 백업으로 바꿀까요? 되돌릴 수 없어요.')) return;
+    db = next;
+    finish('백업으로 바꿨어요');
+  };
+}
 
 /* ───────── 시작 ───────── */
 history.replaceState({ depth: 0 }, '');
