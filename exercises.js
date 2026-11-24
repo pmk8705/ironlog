@@ -78,13 +78,14 @@ window.IRONLOG_EXERCISES = [
   // ── 하체 ──
   {
     id: 'low_bar_squat', name: '로우바 스쿼트', en: 'Low-Bar Squat',
-    aka: ['바벨 스쿼트', '백 스쿼트'], part: '하체', sub: '허벅지', equip: '바벨', type: 'weight_reps', rest: 150,
+    aka: ['로우바', '로우바 백 스쿼트'], part: '하체', sub: '허벅지', equip: '바벨', type: 'weight_reps', rest: 150,
     tips: [
       '승모근 아래 후면 삼각근 선반에 바를 견고하게 얹는다.',
       '복압을 단단히 잡은 상태에서 고관절과 무릎을 동시에 접어 내려간다.'
     ],
     mistake: '무릎이 안쪽으로 모이거나(knee valgus) 허리가 둥글게 말리지 않도록 주의하세요.'
   },
+  { id: 'high_bar_squat', name: '바벨 스쿼트', en: 'High Bar Squat', aka: ['하이바 스쿼트', '백 스쿼트', '바벨 백 스쿼트'], part: '하체', sub: '허벅지', equip: '바벨', type: 'weight_reps', rest: 150, tips: ['승모근 위쪽에 바벨을 얹고 발은 어깨너비, 발끝은 살짝 바깥을 향하게 선다.', '복압을 단단히 잡고 상체를 세운 채 무릎과 고관절을 함께 접어 앉는다.', '발바닥 전체로 바닥을 밀며 무릎이 안으로 모이지 않게 일어난다.'], mistake: '앉았다 일어날 때 무릎이 안쪽으로 모이거나 허리가 말리면 무릎과 허리를 다치기 쉽습니다.' },
   { id: 'good_morning', name: '굿모닝', en: 'Good Morning', aka: ['바벨 굿모닝'], part: '등', sub: '허리', equip: '바벨', type: 'weight_reps', rest: 120, tips: ['스쿼트처럼 바를 승모근 위에 얹고 무릎을 살짝 굽힌다.', '허리를 곧게 편 채 엉덩이를 뒤로 밀며 인사하듯 상체를 숙인다.', '햄스트링과 허리 근육의 긴장을 느끼며 엉덩이를 밀어 일어난다.'], mistake: '무거운 무게로 허리가 둥글게 말린 채 숙이면 허리를 크게 다칠 수 있습니다.' },
   { id: 'barbell_shrug', name: '바벨 슈러그', en: 'Barbell Shrug', aka: ['승모근 바벨 슈러그'], part: '등', sub: '승모근', equip: '바벨', type: 'weight_reps', rest: 90, tips: ['어깨너비로 바벨을 잡고 팔꿈치를 편 상태를 유지한다.', '어깨를 귀 쪽으로 수직으로 끌어올려 1초 멈춘다.', '승모근의 긴장을 느끼며 천천히 어깨를 내린다.'], mistake: '어깨를 앞뒤로 둥글게 돌리며 올리면 어깨 관절에 불필요한 부담을 줍니다.' },
   { id: 't_bar_row', name: '티바 로우', en: 'T-Bar Row', aka: ['T바 로우', '티바로우'], part: '등', sub: '등', equip: '머신', type: 'weight_reps', rest: 120, tips: ['가슴 패드가 있으면 명치를 대고, 서서 하면 상체를 45도 정도 숙인다.', '어깨가 솟지 않게 내린 채 팔꿈치를 등 뒤로 당긴다.', '등 가운데가 조여지는 지점에서 잠시 멈췄다 내린다.'], mistake: '반동을 쓰며 상체를 세워 당기면 등 자극이 빠지고 허리에 무리가 갑니다.' },
@@ -98,6 +99,7 @@ window.IRONLOG_EXERCISES = [
     ],
     mistake: '엉덩이가 시트에서 들릴 정도로 반동을 쓰면 무릎 인대에 무리가 갑니다.'
   },
+  { id: 'front_squat', name: '프론트 스쿼트', en: 'Front Squat', aka: ['바벨 프론트 스쿼트', '전면 스쿼트'], part: '하체', sub: '허벅지', equip: '바벨', type: 'weight_reps', rest: 150, tips: ['어깨 앞쪽(쇄골 위)에 바벨을 얹고 팔꿈치를 앞으로 높게 들어 고정한다.', '상체가 숙여지지 않게 가슴을 세운 채 깊게 앉는다.', '일어날 때도 팔꿈치가 떨어지지 않게 유지하며 허벅지 앞쪽 힘으로 민다.'], mistake: '팔꿈치가 처지면 바벨이 앞으로 쏠려 손목과 허리에 무리가 갑니다.' },
   { id: 'machine_shrug', name: '머신 슈러그', en: 'Machine Shrug', aka: ['스미스 슈러그', '슈러그 머신'], part: '등', sub: '승모근', equip: '머신', type: 'weight_reps', rest: 90, tips: ['손잡이를 잡고 가슴을 편 채 상체를 곧게 세운다.', '팔을 굽히지 말고 어깨만 수직 위쪽으로 끌어올린다.', '맨 위에서 승모근을 조인 뒤 무게가 떨어지지 않게 내린다.'], mistake: '목을 앞으로 빼면서 어깨를 올리면 목 주변이 긴장해 통증이 생길 수 있습니다.' },
   { id: 'assisted_pull_up_machine', name: '어시스트 풀업 머신', en: 'Assisted Pull-Up Machine', aka: ['어시스트 턱걸이', '머신 풀업'], part: '등', sub: '등', equip: '머신', type: 'weight_reps', rest: 90, tips: ['기록하는 무게는 체중을 받쳐 주는 보조 무게다(클수록 쉬움).', '무릎 패드에 올라선 뒤 어깨를 먼저 아래로 내리고 가슴을 든다.', '팔꿈치를 옆구리 아래로 찍어 누르듯 쇄골 쪽으로 당긴다.'], mistake: '내려올 때 반동으로 튕기듯 올라가면 운동 효과가 떨어지고 어깨에 무리가 갈 수 있습니다.' },
   { id: 'leg_press', name: '레그 프레스', en: 'Leg Press', aka: ['레그프레스'], part: '하체', sub: '허벅지', equip: '머신', type: 'weight_reps', rest: 120, tips: [], mistake: '' },
@@ -119,6 +121,15 @@ window.IRONLOG_EXERCISES = [
     ],
     mistake: '허리를 뒤로 심하게 꺾으며 밀어 올리면 요추에 강한 압박이 가해집니다.'
   },
+  { id: 'seated_calf_raise', name: '시티드 카프 레이즈', en: 'Seated Calf Raise', aka: ['앉아서 카프 레이즈', '가자미근 운동'], part: '하체', sub: '종아리', equip: '머신', type: 'weight_reps', rest: 60, tips: ['발 앞꿈치만 발판에 올리고 무릎 패드를 허벅지 끝에 단단히 고정한다.', '뒤꿈치를 발판 아래로 깊게 내려 종아리를 충분히 늘린다.', '엄지발가락 뿌리 쪽으로 밀어 뒤꿈치를 최대한 높이 들어 올린다.'], mistake: '반동으로 빠르게 튀듯 오르내리면 종아리 자극은 줄고 아킬레스건에 무리가 갑니다.' },
+  { id: 'leg_press_calf_raise', name: '레그 프레스 카프 레이즈', en: 'Leg Press Calf Raise', aka: ['레그프레스 종아리', '카프 프레스'], part: '하체', sub: '종아리', equip: '머신', type: 'weight_reps', rest: 60, tips: ['발판 아래쪽에 발 앞꿈치만 걸치고, 머신의 안전 스토퍼를 꼭 걸어 둔다.', '무릎을 잠그지 않고 살짝 굽힌 채 발목만 움직인다.', '뒤꿈치를 내려 종아리를 늘린 뒤 발끝으로 발판을 밀어 조인다.'], mistake: '발판 끝에서 발이 미끄러지면 무게가 그대로 내려와 크게 다칠 수 있습니다.' },
+  { id: 'hip_adduction', name: '힙 어덕션', en: 'Hip Adduction', aka: ['이너타이', '내전근 머신'], part: '하체', sub: '허벅지', equip: '머신', type: 'weight_reps', rest: 60, tips: ['등받이에 허리를 붙이고 허벅지 안쪽이 패드에 닿게 앉는다.', '허벅지 안쪽 힘으로 양다리를 천천히 가운데로 모은다.', '다리를 벌릴 때도 무게가 튕기지 않게 버티며 끝까지 연다.'], mistake: '반동으로 세게 모았다가 튕기듯 벌리면 사타구니 근육을 다치기 쉽습니다.' },
+  { id: 'cable_kickback', name: '케이블 킥백', en: 'Cable Kickback', aka: ['케이블 글루트 킥백', '케이블 힙 익스텐션'], part: '하체', sub: '엉덩이', equip: '케이블', type: 'weight_reps', rest: 60, tips: ['발목 스트랩을 채우고 상체를 살짝 숙여 양손으로 기둥을 잡는다.', '허리가 꺾이지 않게 고정한 채 엉덩이 힘으로 다리를 뒤로 차 올린다.', '엉덩이가 가장 조여지는 지점에서 1초 멈춘 뒤 천천히 돌아온다.'], mistake: '다리를 너무 높이 차려고 허리를 과하게 꺾으면 엉덩이 자극이 빠지고 허리가 아플 수 있습니다.' },
+  { id: 'glute_bridge', name: '글루트 브릿지', en: 'Glute Bridge', aka: ['힙 브릿지', '맨몸 힙 쓰러스트'], part: '하체', sub: '엉덩이', equip: '맨몸', type: 'reps', rest: 60, tips: ['무릎을 세우고 누워 발뒤꿈치를 엉덩이에서 한 뼘 정도 거리에 둔다.', '배에 힘을 준 채 발뒤꿈치로 바닥을 밀어 골반을 일직선까지 올린다.', '맨 위에서 엉덩이를 강하게 조이고 천천히 내린다.'], mistake: '골반을 너무 높이 밀어 허리를 꺾으면 엉덩이 대신 허리에 무리가 갑니다.' },
+  { id: 'seated_leg_curl', name: '시티드 레그 컬', en: 'Seated Leg Curl', aka: ['앉아서 레그 컬', '시티드 햄스트링 컬'], part: '하체', sub: '허벅지', equip: '머신', type: 'weight_reps', rest: 60, tips: ['무릎과 머신 회전축이 일직선이 되도록 등받이와 패드를 맞춘다.', '허벅지 고정 패드를 단단히 내린 채 발목을 몸쪽으로 당긴다.', '뒤꿈치를 의자 아래쪽으로 끝까지 접어 햄스트링을 조인다.'], mistake: '다리를 펼 때 무게를 버티지 않고 툭 놓으면 무릎에 충격이 갑니다.' },
+  { id: 'hack_squat', name: '핵 스쿼트', en: 'Hack Squat', aka: ['핵 스쿼트 머신', '머신 스쿼트'], part: '하체', sub: '허벅지', equip: '머신', type: 'weight_reps', rest: 120, tips: ['등과 엉덩이를 등받이에 빈틈없이 붙이고 발판을 어깨너비로 딛는다.', '무릎이 발끝 방향을 따라가게 하며 허벅지가 발판과 평행할 때까지 앉는다.', '발바닥 전체로 발판을 밀어 올리되 무릎을 튕기듯 완전히 펴지 않는다.'], mistake: '맨 아래에서 엉덩이가 등받이에서 말려 뜨면 허리 아래쪽에 강한 부담이 갑니다.' },
+  { id: 'smith_machine_squat', name: '스미스 머신 스쿼트', en: 'Smith Machine Squat', aka: ['스미스 스쿼트', '스미스 백 스쿼트'], part: '하체', sub: '허벅지', equip: '머신', type: 'weight_reps', rest: 120, tips: ['바 위치보다 발을 반 보에서 한 보 정도 앞에 둔다.', '복압을 유지한 채 레일을 따라 엉덩이를 내리며 앉는다.', '허벅지와 엉덩이 힘으로 바닥을 밀어 수직으로 일어난다.'], mistake: '발을 바 바로 아래에 두면 무릎이 과하게 앞으로 밀려 무릎에 무리가 갑니다.' },
+  { id: 'goblet_squat', name: '고블릿 스쿼트', en: 'Goblet Squat', aka: ['덤벨 고블릿 스쿼트', '프론트 덤벨 스쿼트'], part: '하체', sub: '허벅지', equip: '덤벨', type: 'weight_reps', rest: 90, vmul: 1, tips: ['덤벨 하나를 양손으로 컵 받치듯 가슴 앞에 바짝 붙여 쥔다.', '상체를 곧게 세우고 팔꿈치가 무릎 안쪽으로 들어가도록 깊게 앉는다.', '발바닥 전체로 바닥을 밀며 가슴이 숙여지지 않게 일어난다.'], mistake: '덤벨을 몸에서 멀리 떨어뜨려 들면 팔과 어깨가 먼저 지치고 상체가 앞으로 무너집니다.' },
   { id: 'row_machine', name: '로우 머신', en: 'Chest-Supported Row Machine', aka: ['시티드 로우 머신', '플레이트 로드 로우'], part: '등', sub: '등', equip: '머신', type: 'weight_reps', rest: 90, tips: ['명치가 가슴 패드 위쪽에 오도록 의자 높이를 맞춘다.', '가슴을 패드에 붙인 채 팔꿈치를 뒤로 깊게 당긴다.', '돌아갈 때 어깨가 앞으로 말리지 않게 긴장을 유지한다.'], mistake: '당길 때 가슴이 패드에서 떨어지면 허리 반동을 쓰게 되어 등 자극이 줄어듭니다.' },
   { id: 'one_arm_cable_row', name: '원암 케이블 로우', en: 'One-Arm Cable Row', aka: ['싱글암 케이블 로우', '한손 케이블 로우'], part: '등', sub: '등', equip: '케이블', type: 'weight_reps', rest: 60, tips: ['한 손으로 손잡이를 잡고 반대손으로 기둥이나 허벅지를 짚어 몸을 고정한다.', '팔꿈치를 옆구리에 스치듯 붙이며 골반 쪽으로 당긴다.', '광배근이 늘어나는 느낌을 받으며 천천히 되돌린다.'], mistake: '몸통을 과하게 비틀며 당기면 등 대신 허리와 팔 힘으로 당기게 됩니다.' },
   { id: 'dumbbell_shoulder_press', name: '덤벨 숄더 프레스', en: 'Dumbbell Shoulder Press', aka: ['덤벨 숄더프레스'], part: '어깨', sub: '어깨', equip: '덤벨', type: 'weight_reps', rest: 90, tips: [], mistake: '' },
@@ -143,9 +154,12 @@ window.IRONLOG_EXERCISES = [
   { id: 'lying_triceps_extension', name: '라잉 트라이셉스 익스텐션', en: 'Lying Triceps Extension', aka: ['스컬 크러셔', '라잉 트라이셉스'], part: '팔', sub: '삼두', equip: '바벨', type: 'weight_reps', rest: 90, tips: ['벤치에 누워 팔을 천장으로 뻗은 뒤 머리 쪽으로 살짝 기울인다.', '팔꿈치 간격이 벌어지지 않게 고정하고 아래팔만 접어 바를 내린다.', '삼두가 충분히 늘어나면 팔꿈치를 펴며 시작 위치로 밀어 올린다.'], mistake: '팔꿈치가 바깥으로 크게 벌어지면 삼두 자극이 줄고 팔꿈치에 통증이 생길 수 있습니다.' },
   { id: 'close_grip_bench_press', name: '클로즈그립 벤치프레스', en: 'Close-Grip Bench Press', aka: ['내로우 그립 벤치프레스', '삼두 벤치프레스'], part: '팔', sub: '삼두', equip: '바벨', type: 'weight_reps', rest: 90, tips: ['어깨너비 정도로 바벨을 잡고 손목이 꺾이지 않게 단단히 쥔다.', '팔꿈치를 몸통 옆에 가깝게 붙인 채 명치 쪽으로 바를 내린다.', '삼두 힘으로 팔꿈치를 펴며 수직으로 밀어 올린다.'], mistake: '양손을 너무 좁게 붙여 잡으면 손목과 팔꿈치가 꺾여 다치기 쉽습니다.' },
   { id: 'cable_overhead_triceps_extension', name: '케이블 오버헤드 트라이셉스 익스텐션', en: 'Cable Overhead Triceps Extension', aka: ['케이블 오버헤드 익스텐션', '로프 오버헤드 익스텐션'], part: '팔', sub: '삼두', equip: '케이블', type: 'weight_reps', rest: 60, tips: ['케이블을 등지고 서서 한 발을 앞으로 내딛고 상체를 살짝 숙인다.', '팔꿈치를 머리 옆에 고정한 채 아래팔만 앞으로 뻗어 삼두를 조인다.', '팔꿈치를 머리 뒤로 접을 때 삼두가 늘어나는 것을 느낀다.'], mistake: '허리가 과하게 꺾이거나 팔꿈치가 옆으로 벌어지면 삼두 자극이 흩어지고 허리에 부담이 갑니다.' },
+  { id: 'dumbbell_kickback', name: '덤벨 킥백', en: 'Dumbbell Kickback', aka: ['트라이셉스 킥백', '원암 덤벨 킥백'], part: '팔', sub: '삼두', equip: '덤벨', type: 'weight_reps', rest: 60, tips: ['한 손에 덤벨을 쥐고 반대 손으로 벤치를 짚어 상체를 바닥과 거의 평행하게 숙인다.', '위팔을 옆구리에 붙여 고정한 채 아래팔만 뒤로 쭉 편다.', '팔을 완전히 편 지점에서 삼두를 1초 강하게 조인다.'], mistake: '팔꿈치가 위아래로 흔들리며 반동으로 덤벨을 던지듯 들면 삼두 자극이 사라지고 어깨에 무리가 갑니다.' },
 
 
   { id: 'wrist_curl', name: '리스트 컬', en: 'Wrist Curl', aka: ['손목 컬', '전완'], part: '팔', sub: '전완', equip: '덤벨', type: 'weight_reps', rest: 45, tips: [], mistake: '' },
+  { id: 'reverse_curl', name: '리버스 컬', en: 'Reverse Curl', aka: ['바벨 리버스 컬', '리버스 그립 컬'], part: '팔', sub: '전완', equip: '바벨', type: 'weight_reps', rest: 60, tips: ['손등이 위를 보게 어깨너비로 바를 잡는다.', '팔꿈치를 옆구리에 고정하고 손목이 꺾이지 않게 말아 올린다.', '아래팔 위쪽 근육의 긴장을 느끼며 천천히 내린다.'], mistake: '무거운 무게로 손목이 꺾인 채 올리면 손목과 팔꿈치 바깥쪽에 무리가 갑니다.' },
+  { id: 'farmers_walk', name: '파머스 워크', en: 'Farmers Walk', aka: ['파머스 캐리', '덤벨 파머스 워크'], part: '팔', sub: '전완', equip: '덤벨', type: 'weight_reps', rest: 90, tips: ['기록은 한 손 덤벨 무게와 왕복 횟수로 한다.', '양손에 덤벨을 쥐고 가슴을 편 채 어깨가 처지지 않게 버틴다.', '코어에 힘을 주고 보폭을 일정하게 유지하며 흔들림 없이 걷는다.'], mistake: '어깨가 앞으로 말리거나 몸통이 좌우로 크게 흔들리면 승모근과 허리에 피로가 쌓입니다.' },
 
   // ── 코어 ──
   { id: 'plank', name: '플랭크', en: 'Plank', aka: ['프론트 플랭크', '코어 버티기'], part: '코어', sub: '복부', equip: '맨몸', type: 'time', rest: 60, tips: ['팔꿈치를 어깨 바로 아래에 두고 머리부터 발뒤꿈치까지 일직선을 만든다.', '배꼽을 등 쪽으로 당기고 엉덩이에 힘을 주어 골반을 고정한다.', '숨을 참지 말고 일정하게 호흡한다.'], mistake: '코어 힘이 풀려 허리가 아래로 꺼지면 허리에 큰 부담이 갑니다.' },
@@ -153,11 +167,17 @@ window.IRONLOG_EXERCISES = [
   { id: 'crunch', name: '크런치', en: 'Crunch', aka: ['윗몸 일으키기', '복근 크런치'], part: '코어', sub: '복부', equip: '맨몸', type: 'reps', rest: 45, tips: ['무릎을 세우고 누워 허리를 바닥에 붙인다.', '상체를 끝까지 일으키지 않고 어깨뼈가 바닥에서 떨어질 만큼만 말아 올린다.', '올라갈 때 숨을 강하게 내쉬며 윗배를 조인다.'], mistake: '양손으로 뒷목을 세게 잡아당기면 목에 무리가 갑니다.' },
   { id: 'cable_crunch', name: '케이블 크런치', en: 'Cable Crunch', aka: [], part: '코어', sub: '복부', equip: '케이블', type: 'weight_reps', rest: 60, tips: [], mistake: '' },
   { id: 'ab_rollout', name: 'AB 롤아웃', en: 'Ab Wheel Rollout', aka: ['AB 슬라이드', '복근 휠'], part: '코어', sub: '복부', equip: '기타', type: 'reps', rest: 60, tips: [], mistake: '' },
+  { id: 'lying_leg_raise', name: '라잉 레그 레이즈', en: 'Lying Leg Raise', aka: ['레그 레이즈', '누워서 다리 들기'], part: '코어', sub: '복부', equip: '맨몸', type: 'reps', rest: 60, tips: ['바닥에 누워 배에 힘을 주어 허리를 바닥에 붙인다.', '다리를 곧게 편 채 아랫배 힘으로 수직 가까이 들어 올린다.', '내릴 때 발뒤꿈치가 바닥에 닿기 직전까지 천천히 버티며 내린다.'], mistake: '다리를 내릴 때 허리가 바닥에서 뜨면 복근 대신 허리가 쓰여 허리에 무리가 갑니다.' },
+  { id: 'russian_twist', name: '러시안 트위스트', en: 'Russian Twist', aka: ['트위스트 크런치', '복사근 비틀기'], part: '코어', sub: '복부', equip: '맨몸', type: 'reps', rest: 45, tips: ['무릎을 세우고 앉아 상체를 뒤로 45도 정도 기울인 채 복압을 잡는다.', '팔만 흔들지 말고 가슴과 어깨 전체를 좌우로 돌린다.', '시선은 손끝을 따라가며 옆구리가 조여지는 느낌에 집중한다.'], mistake: '허리가 둥글게 말린 채 빠르게 비틀면 허리를 다치기 쉽습니다.' },
+  { id: 'side_plank', name: '사이드 플랭크', en: 'Side Plank', aka: ['옆 플랭크', '측면 코어 버티기'], part: '코어', sub: '복부', equip: '맨몸', type: 'time', rest: 45, tips: ['팔꿈치를 어깨 바로 아래에 대고 옆으로 누워 골반을 들어 올린다.', '머리부터 발목까지 일직선이 되도록 아래쪽 옆구리에 힘을 준다.', '골반이 앞뒤로 기울지 않게 고정하고 일정하게 호흡하며 버틴다.'], mistake: '엉덩이가 처지거나 어깨가 귀 쪽으로 움츠러들면 코어 자극이 빠지고 어깨에 무리가 갑니다.' },
 
   // ── 유산소 ──
   { id: 'treadmill', name: '러닝머신', en: 'Treadmill', aka: ['트레드밀', '달리기', '러닝', '러닝머신 걷기'], part: '유산소', equip: '머신', type: 'distance_time', rest: 0, tips: ['시선은 정면, 가슴을 편 채 팔을 자연스럽게 앞뒤로 흔든다.', '발뒤꿈치부터 발바닥 가운데, 앞꿈치 순서로 부드럽게 딛는다.', '경사를 올려도 손잡이에 매달리지 않고 걷는다.'], mistake: '손잡이를 꽉 잡고 몸을 뒤로 기댄 채 걸으면 운동 효과가 떨어지고 손목·허리에 무리가 갑니다.' },
+  { id: 'outdoor_run', name: '야외 달리기', en: 'Outdoor Run', aka: ['야외 러닝', '조깅', '로드 러닝'], part: '유산소', equip: '맨몸', type: 'distance_time', rest: 0, tips: ['시선은 정면 앞쪽을 보고 어깨 힘을 뺀 채 팔을 가볍게 흔든다.', '보폭을 억지로 넓히지 말고 몸 중심 바로 아래에 부드럽게 딛는다.'], mistake: '준비운동 없이 처음부터 빨리 달리거나 발뒤꿈치로 세게 찧으며 달리면 무릎과 정강이가 아프기 쉽습니다.' },
   { id: 'stationary_bike', name: '실내 사이클', en: 'Stationary Bike', aka: ['자전거', '사이클'], part: '유산소', equip: '머신', type: 'distance_time', rest: 0, tips: [], mistake: '' },
+  { id: 'elliptical', name: '엘립티컬', en: 'Elliptical', aka: ['일립티컬', '크로스 트레이너'], part: '유산소', equip: '머신', type: 'distance_time', rest: 0, tips: ['발바닥 전체를 페달에 붙이고 허리를 곧게 세운 채 손잡이를 가볍게 잡는다.', '다리 페달링과 팔 밀고 당기기를 리듬감 있게 맞춘다.'], mistake: '손잡이에 몸을 기대거나 뒤꿈치를 들고 발끝으로만 밟으면 종아리와 허리에 무리가 갑니다.' },
   { id: 'stair_climber', name: '스텝밀', en: 'Stair Climber', aka: ['천국의 계단', '계단 오르기'], part: '유산소', equip: '머신', type: 'distance_time', rest: 0, tips: [], mistake: '' },
   { id: 'rowing_machine', name: '로잉머신', en: 'Rowing Machine', aka: ['로잉'], part: '유산소', equip: '머신', type: 'distance_time', rest: 0, tips: [], mistake: '' },
-  { id: 'walking', name: '걷기', en: 'Walking', aka: ['산책', '인클라인 워킹'], part: '유산소', equip: '맨몸', type: 'distance_time', rest: 0, tips: [], mistake: '' }
+  { id: 'walking', name: '걷기', en: 'Walking', aka: ['산책', '인클라인 워킹'], part: '유산소', equip: '맨몸', type: 'distance_time', rest: 0, tips: [], mistake: '' },
+  { id: 'jump_rope', name: '줄넘기', en: 'Jump Rope', aka: ['스킵 로프', '유산소 줄넘기'], part: '유산소', equip: '기타', type: 'distance_time', rest: 0, tips: ['팔꿈치를 옆구리에 가깝게 붙이고 어깨가 아닌 손목으로 줄을 돌린다.', '무릎을 살짝 굽힌 채 발 앞꿈치로 낮고 가볍게 뛴다.'], mistake: '무릎을 편 채 높이 뛰었다가 뒤꿈치로 쿵 떨어지면 아킬레스건과 무릎에 무리가 갑니다.' },
 ];
