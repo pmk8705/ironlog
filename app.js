@@ -1,7 +1,7 @@
 /* IronLog — 웨이트 트레이닝 기록 (1단계: 달력 · 하루 기록 · 운동 추가 · 세트 입력) */
 'use strict';
 
-const APP_VERSION = '0.3.2';
+const APP_VERSION = '0.4.0';
 const STORE_KEY = 'ironlog-v1';
 const PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '유산소'];
 const PART_COLOR = {
@@ -206,9 +206,12 @@ function swapTop(el) {           // 맨 위 화면을 다른 화면으로 바꿈
   history.replaceState({ depth: stack.length }, '');
 }
 function goBack() { if (stack.length) history.back(); }
-window.addEventListener('popstate', () => {
-  const el = stack.pop();
-  if (el) {
+window.addEventListener('popstate', e => {
+  // 보통 한 칸, history.go(-n) 이면 n 칸을 닫는다
+  const depth = e.state && typeof e.state.depth === 'number' ? e.state.depth : 0;
+  let n = Math.max(1, stack.length - depth);
+  while (n-- > 0 && stack.length) {
+    const el = stack.pop();
     el.classList.remove('open');
     if (el === $('setView')) { renderDay(); renderCalendar(); }
     if (el === $('dayView')) renderCalendar();
@@ -433,10 +436,41 @@ $('dayView').addEventListener('click', e => {
   }
 });
 
-/* ───────── 운동 추가 ───────── */
-let pickerPart = '전체';
+/* ───────── 운동 추가 (분류·부위 칸 → 목록, 여러 개 담아 한 번에 추가) ───────── */
+/* 세부 부위는 고르는 화면에서만 쓴다. 달력·통계는 part(7개) 그대로. key = 근육 그림 파일 이름(icons/muscles/key.png) */
+const SUBS = [
+  { name: '가슴', key: 'chest', part: '가슴' },
+  { name: '등', key: 'back', part: '등' },
+  { name: '승모근', key: 'traps', part: '등' },
+  { name: '허리', key: 'lowerback', part: '등' },
+  { name: '어깨', key: 'shoulders', part: '어깨' },
+  { name: '이두', key: 'biceps', part: '팔' },
+  { name: '삼두', key: 'triceps', part: '팔' },
+  { name: '전완', key: 'forearms', part: '팔' },
+  { name: '복부', key: 'abs', part: '코어' },
+  { name: '허벅지', key: 'thighs', part: '하체' },
+  { name: '엉덩이', key: 'glutes', part: '하체' },
+  { name: '종아리', key: 'calves', part: '하체' }
+];
+const DEFAULT_SUB = { '가슴': '가슴', '등': '등', '어깨': '어깨', '팔': '이두', '코어': '복부', '하체': '허벅지' };
+function getSub(ex) { return ex.part === '유산소' ? '' : (ex.sub || DEFAULT_SUB[ex.part] || ''); }
+function allExercises() { return (window.IRONLOG_EXERCISES || []).concat(db.custom); }
+
+const PICK_CATS = [
+  { kind: 'all', label: '전체' },
+  { kind: 'recent', label: '최근 30일' },
+  { kind: 'fav', label: '즐겨찾기' },
+  { kind: 'custom', label: '내 종목' },
+  { kind: 'cardio', label: '유산소' }
+];
+let pickerFilter = null;   // null = 분류 화면 / { kind, sub }
+let pickerSel = [];        // 담은 종목 id (누른 순서)
+/* 목록 화면도 뒤로 가기 한 칸으로 다룬다: 뒤로 가면 분류 화면으로 */
+const pickerListLayer = { classList: { add() {}, remove() { pickerFilter = null; renderPicker(); } } };
+
 function openPicker() {
-  pickerPart = '전체';
+  pickerFilter = null;
+  pickerSel = [];
   $('pickerSearch').value = '';
   renderPicker();
   openLayer($('pickerView'));
@@ -452,81 +486,148 @@ function lastByExercise() {
   });
   return map;
 }
-function renderPicker() {
-  $('pickerChips').innerHTML = ['전체', '즐겨찾기'].concat(PARTS).map(p =>
-    '<button class="chip' + (p === pickerPart ? ' on' : '') + '" data-part="' + p + '">' + (p === '즐겨찾기' ? '★ 즐겨찾기' : p) + '</button>').join('');
+function recentIds(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  const from = ymd(d);
+  const ids = [];
+  Object.keys(db.days).filter(k => k >= from).sort().reverse().forEach(k => {
+    db.days[k].items.forEach(it => {
+      if (it.sets.some(s => s.done) && ids.indexOf(it.ex) < 0) ids.push(it.ex);
+    });
+  });
+  return ids;
+}
+function filterList(f) {
+  if (f.kind === 'recent') return recentIds(30).map(id => exMap[id]).filter(Boolean);
+  if (f.kind === 'fav') return db.favs.map(id => exMap[id]).filter(Boolean);
+  if (f.kind === 'custom') return db.custom.slice();
+  if (f.kind === 'cardio') return allExercises().filter(e => e.part === '유산소');
+  if (f.kind === 'sub') return allExercises().filter(e => getSub(e) === f.sub);
+  return allExercises();
+}
+function filterTitle(f) {
+  if (f.kind === 'sub') return f.sub;
+  const c = PICK_CATS.find(x => x.kind === f.kind);
+  return c ? c.label : '';
+}
 
+function renderPicker() {
   const q = $('pickerSearch').value.trim().toLowerCase().replace(/\s+/g, '');
-  const all = (window.IRONLOG_EXERCISES || []).concat(db.custom);
-  const match = e => {
-    if (pickerPart === '즐겨찾기') { if (db.favs.indexOf(e.id) < 0) return false; }
-    else if (pickerPart !== '전체' && e.part !== pickerPart) return false;
-    if (!q) return true;
-    const hay = [e.name, e.en].concat(e.aka || []).join('|').toLowerCase().replace(/\s+/g, '');
-    return hay.indexOf(q) >= 0;
-  };
   const last = lastByExercise();
   const row = e => {
     const l = last[e.id];
     const fav = db.favs.indexOf(e.id) >= 0;
-    return '<div class="ex-row" style="--pc:' + (PART_COLOR[e.part] || PART_COLOR['기타']) + '">' +
+    const k = pickerSel.indexOf(e.id);
+    const sub = getSub(e);
+    return '<div class="ex-row' + (k >= 0 ? ' sel' : '') + '" style="--pc:' + (PART_COLOR[e.part] || PART_COLOR['기타']) + '">' +
       '<button class="ex-main" data-ex="' + esc(e.id) + '">' +
-      '<span class="ex-dot"></span><span class="ex-name">' + esc(e.name) +
-      '<small>' + esc(e.part) + ' · ' + esc(e.equip) + (e.custom ? ' · 내 종목' : '') + '</small></span>' +
+      '<span class="ex-check">' + (k >= 0 ? (k + 1) : '') + '</span><span class="ex-name">' + esc(e.name) +
+      '<small>' + esc(sub || e.part) + ' · ' + esc(e.equip) + (e.custom ? ' · 내 종목' : '') + '</small></span>' +
       (l ? '<span class="ex-last">' + esc(fmtSet(e.type, l.set, l.unit)) + '</span>' : '') + '</button>' +
       '<button class="star' + (fav ? ' on' : '') + '" data-fav="' + esc(e.id) + '" aria-label="즐겨찾기">' + (fav ? '★' : '☆') + '</button></div>';
   };
-
+  const addBtn = '<button class="ex-row add" data-act="custom">＋ 종목 직접 추가</button>';
   let html = '';
-  if (pickerPart === '즐겨찾기') {
-    const list = db.favs.map(id => exMap[id]).filter(e => e && match(e));
-    html = list.length ? '<div class="group-title">★ 즐겨찾기</div>' + list.map(row).join('')
-      : '<div class="empty">즐겨찾기한 종목이 없어요.<br>종목 오른쪽 ☆ 를 누르면 여기에 모여요.</div>';
-    html += '<button class="ex-row add" data-act="custom">＋ 종목 직접 추가</button>';
-    $('pickerList').innerHTML = html;
-    return;
+  let title = '';
+
+  if (q) {
+    const hay = e => [e.name, e.en].concat(e.aka || []).join('|').toLowerCase().replace(/\s+/g, '');
+    const list = allExercises().filter(e => hay(e).indexOf(q) >= 0);
+    title = '검색 결과 ' + list.length + '개';
+    html = list.length ? list.map(row).join('') : '<div class="empty">찾는 종목이 없어요.<br>아래에서 직접 추가해 주세요.</div>';
+    html += addBtn;
+  } else if (pickerFilter) {
+    const list = filterList(pickerFilter);
+    title = filterTitle(pickerFilter) + ' ' + list.length + '개';
+    if (!list.length) {
+      const msg = { recent: '최근 30일 동안 ✔ 한 운동이 없어요.', fav: '즐겨찾기한 종목이 없어요.<br>종목 오른쪽 ☆ 를 누르면 여기에 모여요.', custom: '직접 추가한 종목이 없어요.' };
+      html = '<div class="empty">' + (msg[pickerFilter.kind] || '종목이 없어요.') + '</div>';
+    } else html = list.map(row).join('');
+    html += addBtn;
+  } else {
+    const cnt = { all: allExercises().length, recent: recentIds(30).length, fav: db.favs.filter(id => exMap[id]).length,
+      custom: db.custom.length, cardio: allExercises().filter(e => e.part === '유산소').length };
+    html = '<div class="pk-home"><div class="pk-cats">' +
+      PICK_CATS.map(c => '<button class="pk-cat" data-kind="' + c.kind + '">' + c.label + ' <b>' + cnt[c.kind] + '</b></button>').join('') +
+      '<button class="pk-cat add" data-act="custom">＋ 직접 추가</button></div>' +
+      '<div class="pk-grid">' + SUBS.map(s => {
+        const n = allExercises().filter(e => getSub(e) === s.name).length;
+        return '<button class="pk-tile" data-sub="' + s.name + '" style="--pc:' + PART_COLOR[s.part] + '">' +
+          '<span class="pk-img"><i>' + s.name.charAt(0) + '</i><img src="icons/muscles/' + s.key + '.png" alt="" onerror="this.remove()"></span>' +
+          '<span class="pk-name">' + s.name + ' <b>' + n + '</b></span></button>';
+      }).join('') + '</div></div>';
   }
-  if (!q && pickerPart === '전체') {
-    const favList = db.favs.map(id => exMap[id]).filter(Boolean);
-    if (favList.length) html += '<div class="group-title">★ 즐겨찾기</div>' + favList.map(row).join('');
-    const recent = Object.keys(last).sort((a, b) => last[b].date.localeCompare(last[a].date)).slice(0, 8)
-      .map(id => exMap[id]).filter(Boolean);
-    if (recent.length) html += '<div class="group-title">최근 한 운동</div>' + recent.map(row).join('');
-  }
-  const parts = pickerPart === '전체' ? PARTS : [pickerPart];
-  parts.forEach(p => {
-    const list = all.filter(e => e.part === p && match(e));
-    if (list.length) html += '<div class="group-title">' + p + '</div>' + list.map(row).join('');
-  });
-  if (!html) html = '<div class="empty">찾는 종목이 없어요.<br>아래에서 직접 추가해 주세요.</div>';
-  html += '<button class="ex-row add" data-act="custom">＋ 종목 직접 추가</button>';
+  $('pickerSubbar').textContent = title;
+  $('pickerSubbar').hidden = !title;
   $('pickerList').innerHTML = html;
+  renderTray();
 }
+
+function renderTray() {
+  const n = pickerSel.length;
+  $('pickerSelList').innerHTML = n
+    ? pickerSel.map(id => '<button class="pk-chip" data-unsel="' + esc(id) + '">' + esc(getEx(id).name) + ' ✕</button>').join('')
+    : '<span class="pk-empty">운동을 누르면 여기에 담겨요</span>';
+  $('pickerDone').disabled = !n;
+  $('pickerDone').textContent = n ? '완료 (' + n + ')' : '완료';
+}
+
+function keepScroll(fn) {
+  const top = $('pickerList').scrollTop;
+  fn();
+  $('pickerList').scrollTop = top;
+}
+
 $('pickerSearch').addEventListener('input', renderPicker);
-$('pickerChips').addEventListener('click', e => {
-  const c = e.target.closest('.chip');
-  if (!c) return;
-  pickerPart = c.dataset.part;
-  renderPicker();
-});
 $('pickerList').addEventListener('click', e => {
   if (e.target.closest('[data-act="custom"]')) return openCustomForm();
+  const cat = e.target.closest('[data-kind]');
+  const tile = e.target.closest('[data-sub]');
+  if (cat || tile) {
+    pickerFilter = cat ? { kind: cat.dataset.kind } : { kind: 'sub', sub: tile.dataset.sub };
+    renderPicker();
+    openLayer(pickerListLayer);
+    $('pickerList').scrollTop = 0;
+    return;
+  }
   const star = e.target.closest('[data-fav]');
   if (star) {
     const id = star.dataset.fav, k = db.favs.indexOf(id);
     if (k >= 0) db.favs.splice(k, 1); else db.favs.push(id);
     save();
-    const top = $('pickerList').scrollTop;
-    renderPicker();
-    $('pickerList').scrollTop = top;
+    keepScroll(renderPicker);
     toast(k >= 0 ? '즐겨찾기에서 뺐어요' : '즐겨찾기에 넣었어요');
     return;
   }
   const r = e.target.closest('.ex-main[data-ex]');
-  if (r) addExercise(r.dataset.ex);
+  if (r) {
+    const id = r.dataset.ex, k = pickerSel.indexOf(id);
+    if (k >= 0) pickerSel.splice(k, 1); else pickerSel.push(id);
+    keepScroll(renderPicker);
+  }
+});
+$('pickerSelList').addEventListener('click', e => {
+  const c = e.target.closest('[data-unsel]');
+  if (!c) return;
+  pickerSel = pickerSel.filter(id => id !== c.dataset.unsel);
+  keepScroll(renderPicker);
+});
+$('pickerDone').addEventListener('click', () => {
+  if (!pickerSel.length) return;
+  const added = pickerSel.map(id => addExerciseItem(id));
+  save();
+  renderDay();
+  pickerSel = [];
+  const depth = stack.indexOf($('pickerView'));            // 운동 추가 아래 화면(하루 기록)까지 한 번에 돌아감
+  afterPop = () => {
+    if (added.length === 1) openSet(added[0].id);
+    else toast(added.length + '개 운동을 추가했어요');
+  };
+  history.go(-(stack.length - depth));
 });
 
-function addExercise(exId) {
+function addExerciseItem(exId) {
   const ex = getEx(exId);
   const prev = prevSets(exId, curDate);
   const unit = db.units[exId] || (prev && prev.unit) || db.unit;
@@ -537,11 +638,7 @@ function addExercise(exId) {
   }) : [cloneSetAsPlan(ex.type, {})];
   const item = { id: uid(), ex: exId, memo: '', unit: unit, sets: sets };
   ensureDay(curDate).items.push(item);
-  save();
-  renderDay();
-  curItemId = item.id;
-  renderSet();
-  swapTop($('setView'));
+  return item;
 }
 
 /* 종목 직접 추가 */
@@ -554,15 +651,28 @@ $('modal').addEventListener('click', e => { if (e.target === $('modal')) goBack(
 function openCustomForm() {
   const q = $('pickerSearch').value.trim();
   const opt = (arr, sel) => arr.map(v => '<option' + (v === sel ? ' selected' : '') + '>' + v + '</option>').join('');
+  const f = pickerFilter;
+  const fSub = f && f.kind === 'sub' ? SUBS.find(x => x.name === f.sub) : null;
+  const defPart = fSub ? fSub.part : (f && f.kind === 'cardio' ? '유산소' : '가슴');
   openModal('<h3>종목 직접 추가</h3>' +
     '<label class="field">이름<input id="cxName" maxlength="30" value="' + esc(q) + '" placeholder="예: 스미스 머신 스쿼트"></label>' +
-    '<div class="row2"><label class="field">부위<select id="cxPart">' + opt(PARTS, pickerPart === '전체' ? '가슴' : pickerPart) + '</select></label>' +
-    '<label class="field">장비<select id="cxEquip">' + opt(EQUIPS, '머신') + '</select></label></div>' +
-    '<div class="row2"><label class="field">기록 방식<select id="cxType">' +
-    Object.keys(TYPE_LABEL).map(k => '<option value="' + k + '">' + TYPE_LABEL[k] + '</option>').join('') + '</select></label>' +
+    '<div class="row2"><label class="field">부위<select id="cxPart">' + opt(PARTS, defPart) + '</select></label>' +
+    '<label class="field" id="cxSubLine">세부 부위<select id="cxSub"></select></label></div>' +
+    '<div class="row2"><label class="field">장비<select id="cxEquip">' + opt(EQUIPS, '머신') + '</select></label>' +
     '<label class="field">쉬는 시간(초)<input id="cxRest" inputmode="numeric" value="90"></label></div>' +
+    '<label class="field">기록 방식<select id="cxType">' +
+    Object.keys(TYPE_LABEL).map(k => '<option value="' + k + '">' + TYPE_LABEL[k] + '</option>').join('') + '</select></label>' +
     '<label class="check-line" id="cxHandLine"><input type="checkbox" id="cxHand" checked> 덤벨 한 손 무게로 적기 (볼륨 ×2)</label>' +
     '<div class="modal-foot"><button data-back>취소</button><button class="ok" id="cxSave">추가</button></div>');
+  const syncSub = () => {
+    const part = $('cxPart').value;
+    const subs = SUBS.filter(x => x.part === part).map(x => x.name);
+    $('cxSubLine').style.visibility = subs.length > 1 ? 'visible' : 'hidden';
+    $('cxSub').innerHTML = opt(subs, fSub && subs.indexOf(fSub.name) >= 0 ? fSub.name : subs[0]);
+    if (part === '유산소') $('cxType').value = 'distance_time';
+  };
+  $('cxPart').onchange = syncSub;
+  syncSub();
   const syncHand = () => { $('cxHandLine').style.display = $('cxEquip').value === '덤벨' ? '' : 'none'; };
   $('cxEquip').onchange = syncHand;
   syncHand();
@@ -570,14 +680,15 @@ function openCustomForm() {
     const name = $('cxName').value.trim();
     if (!name) { $('cxName').focus(); return; }
     const ex = {
-      id: 'custom_' + uid(), name: name, en: '', aka: [], part: $('cxPart').value, equip: $('cxEquip').value,
+      id: 'custom_' + uid(), name: name, en: '', aka: [], part: $('cxPart').value, sub: $('cxSub').value || undefined, equip: $('cxEquip').value,
       type: $('cxType').value, rest: Math.round(parseInput($('cxRest').value) || 90), tips: [], mistake: '', custom: true
     };
     if (ex.equip === '덤벨' && !$('cxHand').checked) ex.vmul = 1;
     db.custom.push(ex);
     rebuildExMap();
     save();
-    afterPop = () => addExercise(ex.id);
+    pickerSel.push(ex.id);
+    afterPop = () => { keepScroll(renderPicker); toast(ex.name + ' 을(를) 만들어 담았어요'); };
     goBack();
   };
 }

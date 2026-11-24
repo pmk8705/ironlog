@@ -40,13 +40,14 @@
   <section class="view" id="pickerView" aria-label="운동 추가">
     <header class="viewbar">
       <button class="icon-btn back" data-back aria-label="뒤로">←</button>
-      <h2>운동 추가</h2>
+      <input type="search" id="pickerSearch" placeholder="종목 검색 (벤치, 스쿼트…)" autocomplete="off">
     </header>
-    <div class="picker-tools">
-      <input type="search" id="pickerSearch" placeholder="종목 검색 (예: 벤치, 스쿼트)" autocomplete="off">
-      <div class="chips" id="pickerChips"></div>
-    </div>
+    <div class="pk-subbar" id="pickerSubbar" hidden></div>
     <div class="picker-list" id="pickerList"></div>
+    <div class="pk-tray" id="pickerTray">
+      <div class="pk-sel" id="pickerSelList"></div>
+      <button class="pk-done" id="pickerDone" disabled>완료</button>
+    </div>
   </section>
 
   <!-- 세트 입력 -->
