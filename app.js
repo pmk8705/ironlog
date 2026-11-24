@@ -1,7 +1,7 @@
 /* IronLog — 웨이트 트레이닝 기록 (1단계: 달력 · 하루 기록 · 운동 추가 · 세트 입력) */
 'use strict';
 
-const APP_VERSION = '0.4.0';
+const APP_VERSION = '0.4.1';
 const STORE_KEY = 'ironlog-v1';
 const PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '유산소'];
 const PART_COLOR = {
@@ -729,6 +729,7 @@ function renderSet() {
 
   $('setView').innerHTML =
     '<header class="viewbar"><button class="icon-btn back" data-back aria-label="뒤로">←</button><h2>' + esc(ex.name) + '</h2>' +
+    ((ex.tips && ex.tips.length) || ex.mistake ? '<button class="icon-btn tip-btn" data-act="tips" aria-label="자세 팁">💡</button>' : '') +
     '<button class="head-btn" data-act="history">지난 기록</button></header>' +
     '<div class="scroll">' +
     '<div class="set-head"><span class="badge">' + esc(ex.part) + '</span><span class="badge">' + esc(ex.equip) + '</span>' +
@@ -786,6 +787,7 @@ $('setView').addEventListener('click', e => {
   const act = b.dataset.act;
 
   if (act === 'history') return openHistory(it.ex);
+  if (act === 'tips') return openTips(ex);
   if (act === 'unit') {
     it.unit = it.unit === 'lb' ? 'kg' : 'lb';
     db.units[it.ex] = it.unit;
@@ -1021,6 +1023,16 @@ function openRestModal(mode, ex, ctx) {
       goBack();
     };
   }
+}
+
+/* ───────── 자세 팁 창 ───────── */
+function openTips(ex) {
+  const tips = ex.tips || [];
+  openModal('<h3>💡 ' + esc(ex.name) + '</h3>' +
+    (ex.en ? '<p class="tip-en">' + esc(ex.en) + '</p>' : '') +
+    (tips.length ? '<ol class="tip-list">' + tips.map(t => '<li>' + esc(t) + '</li>').join('') + '</ol>' : '') +
+    (ex.mistake ? '<div class="tip-warn"><b>⚠ 주의</b>' + esc(ex.mistake) + '</div>' : '') +
+    '<div class="modal-foot"><button class="ok" data-back>닫기</button></div>');
 }
 
 /* ───────── 종목별 지난 기록 (✔ 한 세트만) ───────── */

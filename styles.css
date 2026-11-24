@@ -406,3 +406,12 @@ body.timer-on .toast { bottom: calc(150px + var(--safe-b)); }
 .pk-done { flex: none; height: 46px; padding: 0 20px; border-radius: 23px; background: var(--primary); color: #fff; font-weight: 700; font-size: 15px; }
 .pk-done:disabled { background: #d5dae3; color: #fff; }
 body.timer-on .pk-tray { padding-bottom: calc(74px + var(--safe-b)); }
+
+/* 자세 팁 창 */
+.tip-btn { flex: none; font-size: 20px; }
+.tip-en { margin: -8px 0 12px; font-size: 13px; color: var(--text-2); }
+.tip-list { margin: 0 0 14px; padding-left: 22px; line-height: 1.6; font-size: 15px; }
+.tip-list li { margin-bottom: 8px; }
+.tip-list li::marker { color: var(--primary); font-weight: 700; }
+.tip-warn { background: #fff1f0; border-left: 4px solid var(--danger); border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.6; color: #7a1f1f; margin-bottom: 8px; }
+.tip-warn b { display: block; color: var(--danger); margin-bottom: 2px; }
