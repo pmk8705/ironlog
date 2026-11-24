@@ -422,3 +422,7 @@ button.set-no:active { background: #e8f5ec; }
 .set-no.warm { color: var(--done-line); font-weight: 800; background: #e8f5ec; }
 .card-sets .warm, .hist-sets .warm { color: var(--done-line); opacity: .75; }
 .badge.warm { background: #e8f5ec; color: var(--done-line); }
+
+/* 추정 1RM */
+.badge.orm { background: #fff4e6; color: #b35a00; font-weight: 700; }
+.summary.four { grid-template-columns: repeat(2, 1fr); }

@@ -1,7 +1,7 @@
 /* IronLog — 웨이트 트레이닝 기록 (1단계: 달력 · 하루 기록 · 운동 추가 · 세트 입력) */
 'use strict';
 
-const APP_VERSION = '0.5.1';
+const APP_VERSION = '0.5.2';
 const STORE_KEY = 'ironlog-v1';
 const PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '유산소'];
 const PART_COLOR = {
@@ -115,6 +115,22 @@ function convertWeight(w, from, to) {
 /* 볼륨 배수: 덤벨은 한 손 무게를 적으므로 ×2 (덤벨 하나를 두 손으로 드는 종목은 vmul: 1) */
 function volMul(ex) { return typeof ex.vmul === 'number' ? ex.vmul : (ex.equip === '덤벨' ? 2 : 1); }
 function setVolume(ex, s, unit) { return ex.type === 'weight_reps' ? toKg(s.w, unit) * num(s.r) * volMul(ex) : 0; }
+/* 추정 1RM (Epley: 무게 × (1 + 횟수/30)), 웜업·미완료 제외, 0.5 단위 */
+function e1rm(w, r) {
+  w = num(w); r = num(r);
+  if (!w || !r) return 0;
+  return r === 1 ? w : w * (1 + r / 30);
+}
+function bestE1rm(sets, toUnitKg) {   // toUnitKg(s) 이 있으면 kg으로 바꿔 비교
+  let best = 0;
+  sets.forEach(s => {
+    if (!s.done || s.warmup) return;
+    const v = e1rm(toUnitKg ? toUnitKg(s) : s.w, s.r);
+    if (v > best) best = v;
+  });
+  return Math.round(best * 2) / 2;
+}
+
 /* 세트 뒤 휴식: 세트에 따로 정한 값(s.rest)이 있으면 그것, 없으면 종목 기본값 */
 function setRest(ex, s) { return s && typeof s.rest === 'number' ? s.rest : getRest(ex); }
 function getRest(ex) { const r = db.rest[ex.id]; return typeof r === 'number' ? r : (typeof ex.rest === 'number' ? ex.rest : 90); }
@@ -361,6 +377,7 @@ function renderDay() {
       '<div class="card-title">' + esc(ex.name) + '</div>' +
       '<div class="card-meta"><span class="badge">' + esc(ex.part) + '</span><span class="badge">' + esc(ex.equip) + '</span>' +
       '<span class="progress' + (done ? '' : ' zero') + '">✔ ' + done + ' / ' + work.length + ' 세트</span>' +
+      (ex.type === 'weight_reps' && bestE1rm(it.sets) ? '<span class="badge orm">1RM ' + fmt(bestE1rm(it.sets)) + (it.unit === 'lb' ? 'lb' : '') + '</span>' : '') +
       (it.sets.length > work.length ? '<span class="badge warm">웜업 ' + (it.sets.length - work.length) + '</span>' : '') + '</div>' +
       (it.sets.length ? '<div class="card-sets">' + setsTxt + '</div>' : '') +
       (it.memo ? '<div class="card-meta">📝 ' + esc(it.memo) + '</div>' : '') +
@@ -784,7 +801,9 @@ function updateSetStat() {
   const work = it.sets.filter(s => !s.warmup);
   const done = work.filter(s => s.done);
   const vol = done.reduce((a, s) => a + setVolume(ex, s, it.unit), 0);
-  $('setStat').textContent = (ex.type === 'weight_reps' ? Math.round(vol).toLocaleString() + 'kg · ' : '') + '✔ ' + done.length + ' / ' + work.length + ' 세트';
+  const orm = ex.type === 'weight_reps' ? bestE1rm(it.sets) : 0;
+  $('setStat').textContent = (ex.type === 'weight_reps' ? Math.round(vol).toLocaleString() + 'kg · ' : '') + '✔ ' + done.length + ' / ' + work.length + ' 세트' +
+    (orm ? ' · 1RM ' + fmt(orm) + (it.unit === 'lb' ? 'lb' : 'kg') : '');
 }
 
 $('setView').addEventListener('input', e => {
@@ -1092,12 +1111,15 @@ function openHistory(exId) {
   let best = null;
   hist.forEach(h => h.sets.forEach(s => { if (!s.warmup && (!best || bestKey(ex.type, s) > bestKey(ex.type, best))) best = s; }));
   const bestK = best ? bestKey(ex.type, best) : -1;
+  const kgOf = s => toKg(s.w, s.u);
+  const bestOrm = ex.type === 'weight_reps' ? Math.max.apply(null, [0].concat(hist.map(h => bestE1rm(h.sets, kgOf)))) : 0;
 
   let html = '<header class="viewbar"><button class="icon-btn back" data-back aria-label="뒤로">←</button>' +
     '<h2>' + esc(ex.name) + ' 기록</h2></header><div class="scroll">' +
-    '<div class="summary">' +
+    '<div class="summary' + (ex.type === 'weight_reps' ? ' four' : '') + '">' +
     '<div><span class="k">기록한 날</span><span class="v">' + hist.length + '<small>일</small></span></div>' +
     '<div><span class="k">' + BEST_LABEL[ex.type] + '</span><span class="v" style="font-size:17px">' + (best ? esc(fmtSet(ex.type, best, best.u)) : '-') + '</span></div>' +
+    (ex.type === 'weight_reps' ? '<div><span class="k">최고 추정 1RM</span><span class="v" style="font-size:17px">' + (bestOrm ? fmt(bestOrm) + '<small>kg</small>' : '-') + '</span></div>' : '') +
     '<div><span class="k">마지막</span><span class="v" style="font-size:17px">' + (hist.length ? hist[0].date.slice(5).replace('-', '/') : '-') + '</span></div>' +
     '</div>';
 
@@ -1110,7 +1132,8 @@ function openHistory(exId) {
     html += '<div class="hist-row"><div class="hist-top">' +
       '<span class="hist-date' + (h.date === today ? ' today-mark' : '') + '">' + h.date.replace(/-/g, '.') + ' (' + WEEKDAYS[d.getDay()] + ')</span>' +
       (hasBest ? '<span class="pr">최고</span>' : '') +
-      '<span class="hist-sum">' + work.length + '세트' + (vol > 0 ? ' · ' + vol.toLocaleString() + 'kg' : '') + '</span></div>' +
+      '<span class="hist-sum">' + work.length + '세트' + (vol > 0 ? ' · ' + Math.round(vol).toLocaleString() + 'kg' : '') +
+      (ex.type === 'weight_reps' && bestE1rm(h.sets, kgOf) ? ' · 1RM ' + fmt(bestE1rm(h.sets, kgOf)) : '') + '</span></div>' +
       '<div class="hist-sets">' + h.sets.map(s => '<span class="' + (s.warmup ? 'warm' : bestKey(ex.type, s) === bestK ? 'best' : '') + '">' + (s.warmup ? 'W ' : '') + esc(fmtSet(ex.type, s, s.u)) + '</span>').join(' · ') + '</div></div>';
   });
   html += '</div>';
